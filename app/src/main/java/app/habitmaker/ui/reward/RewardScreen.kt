@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,6 +61,11 @@ import app.habitmaker.ui.component.IconPickerSheet
 import app.habitmaker.ui.component.CircleIcon
 import app.habitmaker.ui.component.ColorGrid
 import app.habitmaker.ui.component.CardShape
+import app.habitmaker.ui.component.RowMinHeight
+import app.habitmaker.ui.component.RowPaddingH
+import app.habitmaker.ui.component.RowPaddingV
+import app.habitmaker.ui.component.RowText
+import app.habitmaker.ui.component.scaled
 import app.habitmaker.ui.component.ScreenTitle
 import app.habitmaker.ui.component.SectionHeader
 import app.habitmaker.ui.component.slideItem
@@ -96,21 +102,17 @@ fun RewardScreen() {
                         slideItem()
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f), CardShape)
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                            .heightIn(min = RowMinHeight)
+                            .padding(horizontal = RowPaddingH, vertical = RowPaddingV),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CircleIcon(u.reward.icon, Color(u.reward.color), size = 32.dp)
                         Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(u.reward.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(
-                                u.habitName + " · " + periodLabel(u.earned.kind, u.earned.periodStart, u.earned.periodEnd),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
+                        RowText(
+                            u.reward.name,
+                            u.habitName + " · " + periodLabel(u.earned.kind, u.earned.periodStart, u.earned.periodEnd),
+                            Modifier.weight(1f),
+                        )
                         FilledTonalButton(onClick = { viewModel.claim(u.earned) }) { Text(stringResource(R.string.reward_claim)) }
                     }
                 }
@@ -127,23 +129,13 @@ fun RewardScreen() {
                         .clip(CardShape)
                         .background(MaterialTheme.colorScheme.surfaceContainerLowest, CardShape)
                         .clickable { editing = row.reward }
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                        .heightIn(min = RowMinHeight)
+                        .padding(horizontal = RowPaddingH, vertical = RowPaddingV),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CircleIcon(row.reward.icon, Color(row.reward.color), size = 32.dp)
                     Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(row.reward.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        if (row.reward.note.isNotBlank()) {
-                            Text(
-                                row.reward.note,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
+                    RowText(row.reward.name, row.reward.note, Modifier.weight(1f))
                     if (row.earnedCount > 0) {
                         Row(
                             Modifier
@@ -152,7 +144,7 @@ fun RewardScreen() {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(painterResource(R.drawable.ph_trophy_fill), contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(14.dp))
-                            Text(" ×${row.earnedCount}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)
+                            Text(" ×${row.earnedCount}", style = MaterialTheme.typography.labelLarge.scaled(0.9f), color = MaterialTheme.colorScheme.tertiary)
                         }
                     }
                 }

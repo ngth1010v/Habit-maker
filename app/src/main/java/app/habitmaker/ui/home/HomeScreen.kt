@@ -86,7 +86,7 @@ private fun NowLabel() = Text(
 fun HomeScreen() {
     val container = LocalAppContainer.current
     val viewModel: HomeViewModel = viewModel(
-        factory = viewModelFactory { initializer { HomeViewModel(container.habitRepository, container.today) } },
+        factory = viewModelFactory { initializer { HomeViewModel(container.habitRepository, container.rewardRepository, container.today) } },
     )
     val data by viewModel.data.collectAsStateWithLifecycle()
     val day by viewModel.day.collectAsStateWithLifecycle()
@@ -169,7 +169,7 @@ private fun DayPage(
                 item(key = "e_in") { EmptyLine(stringResource(R.string.home_none_remain), slideItem()) }
             }
             items(habits.inProcess, key = { it.id }) { habit ->
-                HabitRow(habit.icon, habit.color, habit.name, habit.note, slideItem()) {
+                HabitRow(habit.icon, habit.color, habit.name, habit.note, slideItem(), bars = data.barsOf(habit, day)) {
                     DoneToggle(false, editable, habit.color, stringResource(R.string.action_done)) { onToggle(habit.id, true) }
                 }
             }
@@ -180,7 +180,7 @@ private fun DayPage(
                 item(key = "e_done") { EmptyLine(stringResource(R.string.home_none_done), slideItem()) }
             }
             items(habits.done, key = { it.id }) { habit ->
-                HabitRow(habit.icon, habit.color, habit.name, habit.note, slideItem(), dimmed = true) {
+                HabitRow(habit.icon, habit.color, habit.name, habit.note, slideItem(), dimmed = true, bars = data.barsOf(habit, day)) {
                     DoneToggle(true, editable, habit.color, stringResource(R.string.action_undone)) { onToggle(habit.id, false) }
                 }
             }

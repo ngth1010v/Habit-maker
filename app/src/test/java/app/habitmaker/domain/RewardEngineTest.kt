@@ -103,4 +103,28 @@ class RewardEngineTest {
         val h = habit(start = mon + 10, weekly = RewardRule(9, 0))
         assertTrue(RewardEngine.earned(h, emptySet(), mon).isEmpty())
     }
+
+    @Test
+    fun progressCountsTheDaysPeriod() {
+        // Mon 28/09 – Fri 30/10; Sundays excepted; Tue, Wed and Thu 01/10 done.
+        val h = habit(
+            start = mon,
+            end = day(2026, 10, 30),
+            weekly = RewardRule(7, 1),
+            monthly = RewardRule(8, 0),
+            final = RewardRule(9, 2),
+            exceptions = Exceptions(daysOfWeek = 1 shl 6),
+        )
+        val done = setOf(mon + 1, mon + 2, mon + 3)
+        val p = RewardEngine.progress(h, done, mon + 3)
+        // Week 28/09–04/10: 6 required days, tolerance 1.
+        assertEquals(RewardProgress(PeriodKind.WEEK, 7, 3, 5), p[0])
+        // October 1–30 minus 4 Sundays = 26 required; only 01/10 is done in it.
+        assertEquals(RewardProgress(PeriodKind.MONTH, 8, 1, 26), p[1])
+        // Whole range: 33 days minus 4 Sundays = 29 required, tolerance 2.
+        assertEquals(RewardProgress(PeriodKind.FINAL, 9, 3, 27), p[2])
+        // Before the start, the first period is shown; no rules, no progress.
+        assertEquals(p[0], RewardEngine.progress(h, done, mon - 30)[0])
+        assertTrue(RewardEngine.progress(habit(start = mon), done, mon).isEmpty())
+    }
 }

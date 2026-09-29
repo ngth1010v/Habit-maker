@@ -55,6 +55,9 @@ enum class PeriodKind(val code: Int) {
     }
 }
 
+/** How far a habit is toward one reward in a period: [done] of the [needed] days. */
+data class RewardProgress(val kind: PeriodKind, val rewardId: Long, val done: Int, val needed: Int)
+
 /** A reward a habit has earned for one period; [periodStart] identifies the period. */
 data class EarnedReward(
     val habitId: Long,

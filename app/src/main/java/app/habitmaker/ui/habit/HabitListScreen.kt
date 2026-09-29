@@ -32,12 +32,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.habitmaker.R
 import app.habitmaker.data.repo.HabitRepository
+import app.habitmaker.data.repo.RewardRepository
 import app.habitmaker.domain.Habit
 import app.habitmaker.domain.HabitPhase
 import app.habitmaker.domain.phase
 import app.habitmaker.ui.LocalAppContainer
 import app.habitmaker.ui.component.EmptyLine
 import app.habitmaker.ui.component.HabitRow
+import app.habitmaker.ui.component.RewardBar
+import app.habitmaker.ui.component.rewardBars
 import app.habitmaker.ui.component.ScreenTitle
 import app.habitmaker.ui.component.SectionHeader
 import app.habitmaker.ui.component.rememberReorderState
@@ -45,7 +48,9 @@ import app.habitmaker.ui.component.reorderableItem
 import app.habitmaker.ui.component.slideItem
 import app.habitmaker.util.DateFormat
 import app.habitmaker.util.Today
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -53,13 +58,20 @@ import kotlinx.coroutines.launch
 
 data class HabitSections(
     val sections: Map<HabitPhase, List<Habit>> = emptyMap(),
+    /** Each habit's reward progress bars for the current periods. */
+    val bars: Map<Long, List<RewardBar>> = emptyMap(),
     val loaded: Boolean = false,
 )
 
-class HabitListViewModel(private val repository: HabitRepository, today: Today) : ViewModel() {
-    val state: StateFlow<HabitSections> = combine(repository.habits, today.flow) { habits, t ->
-        HabitSections(habits.groupBy { it.phase(t) }, loaded = true)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HabitSections())
+class HabitListViewModel(private val repository: HabitRepository, rewardRepository: RewardRepository, today: Today) : ViewModel() {
+    val state: StateFlow<HabitSections> = combine(repository.habits, repository.records, rewardRepository.rewards, today.flow) { habits, records, rewards, t ->
+        val names = rewards.associate { it.id to it.name }
+        HabitSections(
+            sections = habits.groupBy { it.phase(t) },
+            bars = habits.associate { it.id to it.rewardBars(records[it.id].orEmpty(), t, names) },
+            loaded = true,
+        )
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HabitSections())
 
     fun reorder(ids: List<Long>) {
         viewModelScope.launch { repository.reorder(ids) }
@@ -80,7 +92,7 @@ private fun phaseOf(key: String) = HabitPhase.valueOf(key.substring(2))
 fun HabitListScreen(onOpen: (habitId: Long) -> Unit) {
     val container = LocalAppContainer.current
     val viewModel: HabitListViewModel = viewModel(
-        factory = viewModelFactory { initializer { HabitListViewModel(container.habitRepository, container.today) } },
+        factory = viewModelFactory { initializer { HabitListViewModel(container.habitRepository, container.rewardRepository, container.today) } },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val byId = remember(state) { state.sections.values.flatten().associateBy { it.id } }
@@ -156,11 +168,12 @@ fun HabitListScreen(onOpen: (habitId: Long) -> Unit) {
                             note = habit.note,
                             modifier = reorderableItem(reorder, key),
                             dimmed = sectionOf(key) == HabitPhase.DONE,
+                            bars = state.bars[key].orEmpty(),
                             // A lifted row's release also ends a tap on it: that must not open the editor.
                             onClick = { if (reorder.draggingKey == null) onOpen(habit.id) },
                         ) {
                             Text(
-                                DateFormat.dayMonth(habit.startDay) + (habit.endDay?.let { " – " + DateFormat.dayMonth(it) } ?: " →"),
+                                DateFormat.dayMonth(habit.startDay) + (habit.endDay?.let { " – " + DateFormat.dayMonth(it) } ?: ""),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.padding(end = 10.dp),

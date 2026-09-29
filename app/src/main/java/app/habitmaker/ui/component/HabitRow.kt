@@ -1,12 +1,16 @@
 package app.habitmaker.ui.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,17 +20,71 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import app.habitmaker.R
+import app.habitmaker.domain.Habit
+import app.habitmaker.domain.RewardEngine
 
 val CardShape = RoundedCornerShape(14.dp)
+
+/** Minimum height and padding of a habit / reward row. */
+val RowMinHeight = 58.dp
+val RowPaddingH = 12.1.dp
+val RowPaddingV = 4.84.dp
+
+private val BarsPullUp = 11.75.dp
+
+/** How far the note is pulled up under the name: halves their gap. */
+private val NotePullUp = 4.15.dp
+
+/** The name, with the note (when there is one) under it; text at 0.9 of the theme size. */
+@Composable
+fun RowText(name: String, note: String, modifier: Modifier = Modifier, dimmed: Boolean = false) {
+    Column(modifier) {
+        Text(
+            name,
+            style = MaterialTheme.typography.bodyLarge.scaled(0.9f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (dimmed) 0.6f else 1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (note.isNotBlank()) {
+            Text(
+                note,
+                style = MaterialTheme.typography.bodySmall.scaled(0.9f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.pullUp(NotePullUp),
+            )
+        }
+    }
+}
+
+/** [this] style at [factor] of its size; the line height (when set) scales with it. */
+fun TextStyle.scaled(factor: Float) = copy(
+    fontSize = if (fontSize.isSpecified) fontSize * factor else fontSize,
+    lineHeight = if (lineHeight.isSpecified) lineHeight * factor else lineHeight,
+)
+
+/** Moves the content up by [by] and drops that much from its measured height. */
+private fun Modifier.pullUp(by: Dp) = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val cut = by.roundToPx()
+    layout(placeable.width, (placeable.height - cut).coerceAtLeast(0)) { placeable.place(0, -cut) }
+}
 
 /**
  * The habit row shared by Home and the Habit list: icon on the left, the name beside it, the note
@@ -40,41 +98,81 @@ fun HabitRow(
     note: String,
     modifier: Modifier = Modifier,
     dimmed: Boolean = false,
+    bars: List<RewardBar> = emptyList(),
     onClick: (() -> Unit)? = null,
     trailing: @Composable () -> Unit = {},
 ) {
-    val tint = Color(color)
-    Row(
-        modifier = modifier
+    val tint = Color(color).let { if (dimmed) it.copy(alpha = 0.55f) else it }
+    Column(
+        modifier
             .fillMaxWidth()
             .clip(CardShape)
             .background(MaterialTheme.colorScheme.surfaceContainerLowest, CardShape)
-            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .heightIn(min = 48.dp)
-            .padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .let { if (onClick != null) it.clickable(onClick = onClick) else it },
     ) {
-        CircleIcon(icon, if (dimmed) tint.copy(alpha = 0.55f) else tint, size = 32.dp)
-        Column(Modifier.weight(1f)) {
-            Text(
-                name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (dimmed) 0.6f else 1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (note.isNotBlank()) {
-                Text(
-                    note,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+        Row(
+            Modifier
+                .heightIn(min = RowMinHeight)
+                .padding(start = RowPaddingH, end = 4.84.dp, top = RowPaddingV, bottom = RowPaddingV),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            CircleIcon(icon, tint, size = 32.dp)
+            RowText(name, note, Modifier.weight(1f), dimmed)
+            trailing()
+        }
+        if (bars.isNotEmpty()) {
+            // Pulled up into the row's bottom slack, leaving a small gap under the text.
+            Column(
+                Modifier.pullUp(BarsPullUp).padding(start = RowPaddingH, end = RowPaddingH, bottom = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(1.8.dp),
+            ) {
+                bars.forEach { ProgressLine(it, tint) }
             }
         }
-        trailing()
+    }
+}
+
+/** One reward's progress in a habit row: [done] of the [needed] days toward [name]. */
+data class RewardBar(val name: String, val done: Int, val needed: Int)
+
+/** The habit's reward bars for the periods around [day]; [rewardNames] by reward id. */
+fun Habit.rewardBars(doneDays: Set<Long>, day: Long, rewardNames: Map<Long, String>): List<RewardBar> =
+    RewardEngine.progress(this, doneDays, day).mapNotNull { p ->
+        rewardNames[p.rewardId]?.let { RewardBar(it, p.done, p.needed) }
+    }
+
+@Composable
+private fun ProgressLine(bar: RewardBar, color: Color) {
+    val labelStyle = MaterialTheme.typography.labelSmall.scaled(0.8f)
+    val fraction by animateFloatAsState((bar.done.toFloat() / bar.needed).coerceIn(0f, 1f), tween(300), label = "bar")
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                bar.name,
+                style = labelStyle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Text("${bar.done}/${bar.needed}", style = labelStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Box(
+            Modifier
+                .padding(top = 2.dp)
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth(fraction)
+                    .fillMaxHeight()
+                    .background(color, CircleShape),
+            )
+        }
     }
 }
 

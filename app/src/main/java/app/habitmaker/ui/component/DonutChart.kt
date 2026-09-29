@@ -21,11 +21,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.isSpecified
 
 /** Donut of [done] / [total], with the two numbers stacked in the middle, split by a line. */
 @Composable
@@ -45,16 +43,13 @@ fun DonutChart(done: Int, total: Int, modifier: Modifier = Modifier, size: Dp = 
             }
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$done", style = MaterialTheme.typography.titleLarge.scaled(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Text("$done", style = MaterialTheme.typography.titleLarge.scaled(NUMBER_SCALE), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             // Tops the smaller numbers' gaps back up to 0.9 of the full-size ones.
             Box(Modifier.padding(top = 0.4.dp, bottom = 0.8.dp).width(size * 0.32f).height(1.5.dp).background(MaterialTheme.colorScheme.outline))
-            Text("$total", style = MaterialTheme.typography.titleMedium.scaled(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("$total", style = MaterialTheme.typography.titleMedium.scaled(NUMBER_SCALE), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
-/** The numbers at 0.8 of the theme size; the line height (when the theme sets one) shrinks with them. */
-private fun TextStyle.scaled() = copy(
-    fontSize = if (fontSize.isSpecified) fontSize * 0.8f else fontSize,
-    lineHeight = if (lineHeight.isSpecified) lineHeight * 0.8f else lineHeight,
-)
+/** The numbers' size, relative to the theme's title styles. */
+private const val NUMBER_SCALE = 0.648f

@@ -49,6 +49,23 @@ object RewardEngine {
         return n
     }
 
+    /**
+     * Progress toward each of [habit]'s rewards in the period around [day] (weekly, monthly, final
+     * order). [day] is first clamped to the habit's range, so a planned habit shows its first period
+     * and a finished one its last. A period with no required days is left out.
+     */
+    fun progress(habit: Habit, doneDays: Set<Long>, day: Long): List<RewardProgress> {
+        val d = habit.endDay?.let { minOf(maxOf(day, habit.startDay), it) } ?: maxOf(day, habit.startDay)
+        val month = LocalDate.ofEpochDay(d).withDayOfMonth(1)
+        return listOfNotNull(
+            habit.weekly?.let { tally(habit, it, PeriodKind.WEEK, weekStart(d), weekStart(d) + 6, doneDays) },
+            habit.monthly?.let {
+                tally(habit, it, PeriodKind.MONTH, month.toEpochDay(), month.with(TemporalAdjusters.lastDayOfMonth()).toEpochDay(), doneDays)
+            },
+            habit.final?.let { rule -> habit.endDay?.let { tally(habit, rule, PeriodKind.FINAL, habit.startDay, it, doneDays) } },
+        )
+    }
+
     private fun check(
         habit: Habit,
         rule: RewardRule,
@@ -56,7 +73,19 @@ object RewardEngine {
         periodStart: Long,
         periodEnd: Long,
         doneDays: Set<Long>,
-    ): EarnedReward? {
+    ): EarnedReward? = tally(habit, rule, kind, periodStart, periodEnd, doneDays)
+        ?.takeIf { it.done >= it.needed }
+        ?.let { EarnedReward(habit.id, rule.rewardId, kind, periodStart, periodEnd) }
+
+    /** Done and needed days of the period, clipped to the habit's range; null when nothing is required. */
+    private fun tally(
+        habit: Habit,
+        rule: RewardRule,
+        kind: PeriodKind,
+        periodStart: Long,
+        periodEnd: Long,
+        doneDays: Set<Long>,
+    ): RewardProgress? {
         val a = maxOf(periodStart, habit.startDay)
         val b = habit.endDay?.let { minOf(periodEnd, it) } ?: periodEnd
         var required = 0
@@ -68,8 +97,7 @@ object RewardEngine {
             }
         }
         if (required == 0) return null
-        val needed = maxOf(1, required - rule.tolerance)
-        return if (done >= needed) EarnedReward(habit.id, rule.rewardId, kind, periodStart, periodEnd) else null
+        return RewardProgress(kind, rule.rewardId, done, needed = maxOf(1, required - rule.tolerance))
     }
 
     fun weekStart(day: Long): Long =

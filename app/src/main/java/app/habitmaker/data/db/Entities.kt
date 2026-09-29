@@ -7,6 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.habitmaker.domain.Exceptions
 import app.habitmaker.domain.Habit
+import app.habitmaker.domain.HabitColors
 import app.habitmaker.domain.Reward
 import app.habitmaker.domain.RewardRule
 
@@ -15,11 +16,13 @@ data class RewardEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val icon: String,
+    /** ARGB; rows from schema 1 get [HabitColors.DEFAULT] (teal 600). */
+    @ColumnInfo(defaultValue = "-16742021") val color: Int,
     val note: String,
     @ColumnInfo(name = "sort_order") val sortOrder: Int,
     @ColumnInfo(name = "created_at") val createdAt: Long,
 ) {
-    fun toDomain() = Reward(id, name, icon, note, sortOrder)
+    fun toDomain() = Reward(id, name, icon, color, note, sortOrder)
 }
 
 @Entity(

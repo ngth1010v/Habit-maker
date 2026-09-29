@@ -1,13 +1,15 @@
 package app.habitmaker.data.db
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
     entities = [RewardEntity::class, HabitEntity::class, HabitRecordEntity::class, RewardClaimEntity::class],
-    version = 1,
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)], // 2: reward.color
     exportSchema = true,
 )
 abstract class HabitDatabase : RoomDatabase() {

@@ -67,7 +67,6 @@ import app.habitmaker.ui.component.CircleIcon
 import app.habitmaker.ui.component.ColorGrid
 import app.habitmaker.ui.component.ConfirmDialog
 import app.habitmaker.ui.component.IconPickerSheet
-import app.habitmaker.ui.component.NeutralCircleIcon
 import app.habitmaker.util.DateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -336,7 +335,7 @@ private fun RuleEditor(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (reward != null) {
-                    NeutralCircleIcon(reward.icon, size = 28.dp)
+                    CircleIcon(reward.icon, Color(reward.color), size = 28.dp)
                     Spacer(Modifier.width(10.dp))
                     Text(reward.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                 } else {
@@ -359,7 +358,7 @@ private fun RuleEditor(
                 )
                 rewards.forEach { r ->
                     DropdownMenuItem(
-                        leadingIcon = { NeutralCircleIcon(r.icon, size = 28.dp) },
+                        leadingIcon = { CircleIcon(r.icon, Color(r.color), size = 28.dp) },
                         text = { Text(r.name) },
                         onClick = {
                             onChange(rule.copy(rewardId = r.id))

@@ -2,10 +2,10 @@ package app.habitmaker.ui.habit
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,6 +38,7 @@ import app.habitmaker.domain.phase
 import app.habitmaker.ui.LocalAppContainer
 import app.habitmaker.ui.component.EmptyLine
 import app.habitmaker.ui.component.HabitRow
+import app.habitmaker.ui.component.ScreenTitle
 import app.habitmaker.ui.component.SectionHeader
 import app.habitmaker.ui.component.rememberReorderState
 import app.habitmaker.ui.component.reorderableItem
@@ -119,10 +120,12 @@ fun HabitListScreen(onOpen: (habitId: Long) -> Unit) {
     )
 
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
+        Column {
+        ScreenTitle(stringResource(R.string.nav_habit))
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
+            contentPadding = PaddingValues(top = 4.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(order, key = { it }) { key ->
@@ -160,18 +163,13 @@ fun HabitListScreen(onOpen: (habitId: Long) -> Unit) {
                                 DateFormat.dayMonth(habit.startDay) + (habit.endDay?.let { " – " + DateFormat.dayMonth(it) } ?: " →"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.padding(end = 4.dp),
-                            )
-                            Icon(
-                                painterResource(R.drawable.ph_dots_six_vertical),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.outlineVariant,
-                                modifier = Modifier.padding(end = 6.dp).size(20.dp),
+                                modifier = Modifier.padding(end = 10.dp),
                             )
                         }
                     }
                 }
             }
+        }
         }
         FloatingActionButton(
             onClick = { onOpen(0L) },

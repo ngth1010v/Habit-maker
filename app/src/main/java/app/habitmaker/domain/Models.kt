@@ -39,6 +39,8 @@ data class Reward(
     val id: Long,
     val name: String,
     val icon: String,
+    /** ARGB, one of [app.habitmaker.domain.HabitColors]. */
+    val color: Int,
     val note: String,
     val sortOrder: Int,
 )

@@ -40,15 +40,4 @@ fun CircleIcon(name: String, color: Color, modifier: Modifier = Modifier, size: 
     }
 }
 
-/** Neutral variant, for rewards (which have no color). */
-@Composable
-fun NeutralCircleIcon(name: String, modifier: Modifier = Modifier, size: Dp = 40.dp) {
-    Box(
-        modifier = modifier.size(size).background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        PhIcon(name, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(size * 0.56f))
-    }
-}
-
 fun Color.light(fraction: Float = 0.82f): Color = lerp(this, Color.White, fraction)

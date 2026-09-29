@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -133,6 +134,8 @@ fun HabitRoot() {
 
     Scaffold(
         bottomBar = { BottomBar(selected = if (onTabs) tab else null, onSelect = ::selectTab) },
+        // Each screen pads for the status bar itself, so Home's day panel can run up behind it.
+        contentWindowInsets = WindowInsets(0),
     ) { padding ->
         Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
             composedTabs.forEach { route ->
@@ -189,12 +192,12 @@ private fun TabContent(route: String, shown: Boolean, navController: NavHostCont
     }
 }
 
-/** Icon-only bottom bar: 0.6x icons (13dp) and a bar height to match. */
+/** Icon-only bottom bar: small icons (17dp) in a compact bar. */
 @Composable
 private fun BottomBar(selected: String?, onSelect: (String) -> Unit) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Row(
-            Modifier.fillMaxWidth().navigationBarsPadding().height(44.dp),
+            Modifier.fillMaxWidth().navigationBarsPadding().height(35.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             bottomItems.forEach { item ->
@@ -225,7 +228,7 @@ private fun BottomBar(selected: String?, onSelect: (String) -> Unit) {
                             painterResource(if (isSelected) item.iconSelected else item.icon),
                             contentDescription = stringResource(item.labelRes),
                             tint = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(13.dp),
+                            modifier = Modifier.size(17.dp),
                         )
                     }
                 }

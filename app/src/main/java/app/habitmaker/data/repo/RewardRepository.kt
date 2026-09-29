@@ -15,14 +15,14 @@ class RewardRepository(db: HabitDatabase) {
 
     val claims: Flow<List<RewardClaimEntity>> = dao.observeClaims()
 
-    suspend fun save(id: Long, name: String, icon: String, note: String) {
+    suspend fun save(id: Long, name: String, icon: String, color: Int, note: String) {
         if (id == 0L) {
             dao.insert(
-                RewardEntity(name = name, icon = icon, note = note, sortOrder = dao.nextSortOrder(), createdAt = System.currentTimeMillis()),
+                RewardEntity(name = name, icon = icon, color = color, note = note, sortOrder = dao.nextSortOrder(), createdAt = System.currentTimeMillis()),
             )
         } else {
             val old = dao.find(id) ?: return
-            dao.update(old.copy(name = name, icon = icon, note = note))
+            dao.update(old.copy(name = name, icon = icon, color = color, note = note))
         }
     }
 

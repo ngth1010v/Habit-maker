@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
@@ -64,9 +63,9 @@ import kotlin.math.abs
 import app.habitmaker.util.DateFormat
 import java.time.LocalDate
 
-// 0.7 of the original 118dp.
-private val PanelWidth = 83.dp
-private val NowPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp)
+private val PanelWidth = 73.dp
+private val NowPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)
+private val NowHeight = 28.dp
 private val DAY_SWIPE_DISTANCE = 40.dp
 private const val SETTLE_MS = 200
 
@@ -96,13 +95,12 @@ fun HomeScreen() {
     val moving by remember { derivedStateOf { offset.value != 0f } }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val panelPx = with(density) { (PanelWidth + 12.dp).toPx() }
+    val panelPx = with(density) { PanelWidth.toPx() }
     val minDistance = with(density) { DAY_SWIPE_DISTANCE.toPx() }
 
     Box(
         Modifier
             .fillMaxSize()
-            .statusBarsPadding()
             .clipToBounds()
             .onSizeChanged { height = it.height }
             // On the parent, not the (moving) panel: the finger is tracked in a fixed frame, and the
@@ -159,10 +157,11 @@ private fun DayPage(
 ) {
     val habits = remember(data, day) { data.dayOf(day) }
     val editable = day <= data.today
-    Row(modifier.background(MaterialTheme.colorScheme.background).padding(start = 12.dp, end = 12.dp, top = 12.dp)) {
+    // The panel runs edge to edge (behind the status bar, down to the bottom bar); the list keeps clear of the status bar.
+    Row(modifier.background(MaterialTheme.colorScheme.background).padding(start = 12.dp)) {
         LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            contentPadding = PaddingValues(bottom = 16.dp),
+            modifier = Modifier.weight(1f).fillMaxHeight().statusBarsPadding(),
+            contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item(key = "h_in") { SectionHeader(stringResource(R.string.section_in_process), slideItem(), habits.inProcess.size) }
@@ -187,7 +186,7 @@ private fun DayPage(
             }
         }
         Spacer(Modifier.width(12.dp))
-        DayPanel(day, data.today, habits, onNow, Modifier.width(PanelWidth).fillMaxHeight().padding(bottom = 12.dp))
+        DayPanel(day, data.today, habits, onNow, Modifier.width(PanelWidth).fillMaxHeight())
     }
 }
 
@@ -198,11 +197,12 @@ private fun DayPanel(day: Long, today: Long, habits: DayHabits, onNow: () -> Uni
     val accent = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
     Column(
         modifier
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .statusBarsPadding()
             .padding(horizontal = 6.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        DonutChart(done = habits.done.size, total = habits.total, size = 66.dp, stroke = 7.dp)
+        DonutChart(done = habits.done.size, total = habits.total, size = 52.dp, stroke = 6.dp)
         Spacer(Modifier.height(14.dp))
         Text(
             DateFormat.dayOfWeek(day),
@@ -223,7 +223,8 @@ private fun DayPanel(day: Long, today: Long, habits: DayHabits, onNow: () -> Uni
             date.year.toString(),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth().padding(start = 2.dp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(10.dp))
         Text(
@@ -240,9 +241,9 @@ private fun DayPanel(day: Long, today: Long, habits: DayHabits, onNow: () -> Uni
         Spacer(Modifier.weight(1f))
         // Filled only when it would move: away from today.
         if (isToday) {
-            FilledTonalButton(onClick = onNow, modifier = Modifier.fillMaxWidth(), contentPadding = NowPadding) { NowLabel() }
+            FilledTonalButton(onClick = onNow, modifier = Modifier.fillMaxWidth().height(NowHeight), contentPadding = NowPadding) { NowLabel() }
         } else {
-            Button(onClick = onNow, modifier = Modifier.fillMaxWidth(), contentPadding = NowPadding) { NowLabel() }
+            Button(onClick = onNow, modifier = Modifier.fillMaxWidth().height(NowHeight), contentPadding = NowPadding) { NowLabel() }
         }
     }
 }

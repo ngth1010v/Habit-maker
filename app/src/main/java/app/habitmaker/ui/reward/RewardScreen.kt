@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,20 +50,23 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.habitmaker.R
 import app.habitmaker.data.icon.PhosphorIcons
+import app.habitmaker.domain.HabitColors
 import app.habitmaker.domain.PeriodKind
 import app.habitmaker.domain.Reward
 import app.habitmaker.ui.LocalAppContainer
 import app.habitmaker.ui.component.ConfirmDialog
 import app.habitmaker.ui.component.EmptyLine
 import app.habitmaker.ui.component.IconPickerSheet
-import app.habitmaker.ui.component.NeutralCircleIcon
+import app.habitmaker.ui.component.CircleIcon
+import app.habitmaker.ui.component.ColorGrid
 import app.habitmaker.ui.component.CardShape
+import app.habitmaker.ui.component.ScreenTitle
 import app.habitmaker.ui.component.SectionHeader
 import app.habitmaker.ui.component.slideItem
 import app.habitmaker.util.DateFormat
 
 /** Marker for "create a new reward" in the sheet state. */
-private val NewReward = Reward(0, "", PhosphorIcons.DEFAULT_REWARD, "", 0)
+private val NewReward = Reward(0, "", PhosphorIcons.DEFAULT_REWARD, HabitColors.DEFAULT, "", 0)
 
 /**
  * Earned rewards waiting to be claimed on top, then every reward (one row each, with how many
@@ -78,9 +82,11 @@ fun RewardScreen() {
     var editing by remember { mutableStateOf<Reward?>(null) }
 
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
+        Column {
+        ScreenTitle(stringResource(R.string.nav_reward))
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
+            contentPadding = PaddingValues(top = 4.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (state.unclaimed.isNotEmpty()) {
@@ -90,10 +96,10 @@ fun RewardScreen() {
                         slideItem()
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f), CardShape)
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        NeutralCircleIcon(u.reward.icon, size = 40.dp)
+                        CircleIcon(u.reward.icon, Color(u.reward.color), size = 32.dp)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(u.reward.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -121,10 +127,10 @@ fun RewardScreen() {
                         .clip(CardShape)
                         .background(MaterialTheme.colorScheme.surfaceContainerLowest, CardShape)
                         .clickable { editing = row.reward }
-                        .padding(horizontal = 10.dp, vertical = 10.dp),
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    NeutralCircleIcon(row.reward.icon, size = 40.dp)
+                    CircleIcon(row.reward.icon, Color(row.reward.color), size = 32.dp)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(row.reward.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -152,6 +158,7 @@ fun RewardScreen() {
                 }
             }
         }
+        }
         FloatingActionButton(
             onClick = { editing = NewReward },
             containerColor = MaterialTheme.colorScheme.primary,
@@ -165,8 +172,8 @@ fun RewardScreen() {
     editing?.let { reward ->
         RewardSheet(
             reward = reward,
-            onSave = { name, icon, note ->
-                viewModel.save(reward.id, name, icon, note)
+            onSave = { name, icon, color, note ->
+                viewModel.save(reward.id, name, icon, color, note)
                 editing = null
             },
             onDelete = {
@@ -189,13 +196,14 @@ fun periodLabel(kind: PeriodKind, start: Long, end: Long): String = when (kind) 
 @Composable
 private fun RewardSheet(
     reward: Reward,
-    onSave: (name: String, icon: String, note: String) -> Unit,
+    onSave: (name: String, icon: String, color: Int, note: String) -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf(reward.name) }
     var note by remember { mutableStateOf(reward.note) }
     var icon by remember { mutableStateOf(reward.icon) }
+    var color by remember { mutableStateOf(reward.color) }
     var picking by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     val isNew = reward.id == 0L
@@ -207,7 +215,7 @@ private fun RewardSheet(
         ) {
             Text(stringResource(if (isNew) R.string.reward_new else R.string.reward_edit), style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                NeutralCircleIcon(icon, size = 52.dp, modifier = Modifier.clip(CircleShape).clickable { picking = true })
+                CircleIcon(icon, Color(color), size = 52.dp, modifier = Modifier.clip(CircleShape).clickable { picking = true })
                 Spacer(Modifier.width(12.dp))
                 OutlinedTextField(
                     value = name,
@@ -224,6 +232,7 @@ private fun RewardSheet(
                 maxLines = 3,
                 modifier = Modifier.fillMaxWidth(),
             )
+            ColorGrid(selected = color, onSelect = { color = it })
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!isNew) {
                     OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.weight(1f)) {
@@ -231,7 +240,7 @@ private fun RewardSheet(
                     }
                 }
                 Button(
-                    onClick = { onSave(name, icon, note) },
+                    onClick = { onSave(name, icon, color, note) },
                     enabled = name.isNotBlank(),
                     modifier = Modifier.weight(1f),
                 ) { Text(stringResource(R.string.common_save)) }
@@ -241,7 +250,7 @@ private fun RewardSheet(
     if (picking) {
         IconPickerSheet(
             selected = icon,
-            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            tint = Color(color),
             onSelect = {
                 icon = it
                 picking = false

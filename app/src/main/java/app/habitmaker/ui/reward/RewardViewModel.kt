@@ -56,8 +56,8 @@ class RewardViewModel(
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RewardUiState())
 
-    fun save(id: Long, name: String, icon: String, note: String) {
-        viewModelScope.launch { rewardRepository.save(id, name.trim(), icon, note.trim()) }
+    fun save(id: Long, name: String, icon: String, color: Int, note: String) {
+        viewModelScope.launch { rewardRepository.save(id, name.trim(), icon, color, note.trim()) }
     }
 
     fun delete(id: Long) {

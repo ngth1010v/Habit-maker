@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.habitmaker.R
 import app.habitmaker.util.LocalePrefs
@@ -48,7 +50,8 @@ fun SettingScreen() {
         Text(
             stringResource(R.string.nav_setting),
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
         )
         SectionLabel(stringResource(R.string.setting_general))
         SettingRow(R.drawable.ph_translate, stringResource(R.string.setting_language), languageLabel(current)) { picking = true }
@@ -108,7 +111,8 @@ private fun SectionLabel(text: String) {
         text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 4.dp),
+        // Nudged down onto the row's top padding: half the old label-to-row gap.
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp).offset(y = 4.dp),
     )
 }
 

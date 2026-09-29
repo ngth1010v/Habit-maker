@@ -56,6 +56,10 @@ class HomeViewModel(private val repository: HabitRepository, private val today: 
         _day.value = day
     }
 
+    fun stepDay(delta: Int) {
+        _day.value += delta
+    }
+
     fun toToday() {
         _day.value = today.value
     }

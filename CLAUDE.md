@@ -39,7 +39,8 @@ UI (one package per tab under `ui/`) -> ViewModel (StateFlow) -> repository (`da
   `res/drawable/ph_*.xml` with `node tools/gen_phosphor.mjs <extracted @phosphor-icons/core package>`.
 - Tabs live outside the NavHost (as in Outgo) and stay composed; the NavHost only holds the habit
   editor (`habit/edit/{id}`, 0 = new). LazyColumn keys must be Bundle-able (Long/String).
-- Home: a sideways swipe that starts on the right-hand day panel changes the day; anywhere else it
-  switches tabs (the day `SwipeLevel` returns null for touches left of the panel).
+- Home: a vertical swipe that starts on the right-hand day panel changes the day (up = next day),
+  handled by a pointerInput on the Home root that ignores touches left of the panel; sideways swipes
+  anywhere switch tabs.
 - Cold start: nothing blocks the first frame; `HabitApp.onCreate` opens the DB and reads the icon
   asset on background threads. Language is a SharedPreferences value (`util/LocalePrefs.kt`).

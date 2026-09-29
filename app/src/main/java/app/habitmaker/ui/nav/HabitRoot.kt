@@ -13,10 +13,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.ripple
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -122,25 +132,7 @@ fun HabitRoot() {
     }
 
     Scaffold(
-        bottomBar = {
-            NavigationBar {
-                bottomItems.forEach { item ->
-                    val selected = onTabs && item.route == tab
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = { selectTab(item.route) },
-                        icon = {
-                            Icon(
-                                painterResource(if (selected) item.iconSelected else item.icon),
-                                contentDescription = stringResource(item.labelRes),
-                                modifier = Modifier.size(22.dp),
-                            )
-                        },
-                        label = { Text(stringResource(item.labelRes)) },
-                    )
-                }
-            }
-        },
+        bottomBar = { BottomBar(selected = if (onTabs) tab else null, onSelect = ::selectTab) },
     ) { padding ->
         Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
             composedTabs.forEach { route ->
@@ -194,6 +186,51 @@ private fun TabContent(route: String, shown: Boolean, navController: NavHostCont
         Routes.REWARD -> RewardScreen()
         Routes.ANALYSIS -> AnalysisScreen()
         Routes.SETTING -> SettingScreen()
+    }
+}
+
+/** Icon-only bottom bar: 0.6x icons (13dp) and a bar height to match. */
+@Composable
+private fun BottomBar(selected: String?, onSelect: (String) -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+        Row(
+            Modifier.fillMaxWidth().navigationBarsPadding().height(44.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            bottomItems.forEach { item ->
+                val isSelected = item.route == selected
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .selectable(
+                            selected = isSelected,
+                            onClick = { onSelect(item.route) },
+                            role = Role.Tab,
+                            interactionSource = null,
+                            indication = ripple(bounded = false, radius = 24.dp),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        Modifier
+                            .size(width = 40.dp, height = 24.dp)
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+                                CircleShape,
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painterResource(if (isSelected) item.iconSelected else item.icon),
+                            contentDescription = stringResource(item.labelRes),
+                            tint = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(13.dp),
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

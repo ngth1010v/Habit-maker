@@ -46,23 +46,42 @@ import app.habitmaker.ui.component.DoneToggle
 import app.habitmaker.ui.component.EmptyLine
 import app.habitmaker.ui.component.HabitRow
 import app.habitmaker.ui.component.SectionHeader
-import app.habitmaker.ui.component.rememberSwipeLevel
 import app.habitmaker.ui.component.slideItem
-import app.habitmaker.ui.component.swipeShift
-import app.habitmaker.ui.component.swipeStep
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.verticalDrag
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import kotlinx.coroutines.launch
+import kotlin.math.abs
 import app.habitmaker.util.DateFormat
 import java.time.LocalDate
 
-private val PanelWidth = 118.dp
-private val NowPadding = PaddingValues(horizontal = 4.dp, vertical = 10.dp)
+// 0.7 of the original 118dp.
+private val PanelWidth = 83.dp
+private val NowPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp)
+private val DAY_SWIPE_DISTANCE = 40.dp
+private const val SETTLE_MS = 200
 
 @Composable
-private fun NowLabel() = Text(stringResource(R.string.home_now), maxLines = 1, softWrap = false)
+private fun NowLabel() = Text(
+    stringResource(R.string.home_now),
+    style = MaterialTheme.typography.labelMedium,
+    maxLines = 1,
+    softWrap = false,
+)
 
 /**
- * The day's habits on the left ("In-process" and "Done"), the day panel on the right. A sideways
- * swipe that starts on the panel steps to the previous / next day like a pager; one that starts on
- * the list goes to the tab level instead.
+ * The day's habits on the left ("In-process" and "Done"), the day panel on the right. Swiping up /
+ * down on the panel steps to the next / previous day like a vertical pager; sideways swipes anywhere
+ * go to the tab level.
  */
 @Composable
 fun HomeScreen() {
@@ -72,33 +91,58 @@ fun HomeScreen() {
     )
     val data by viewModel.data.collectAsStateWithLifecycle()
     val day by viewModel.day.collectAsStateWithLifecycle()
-    var width by remember { mutableIntStateOf(0) }
-    val panelPx = with(LocalDensity.current) { (PanelWidth + 12.dp).toPx() }
-
-    val daySwipe = rememberSwipeLevel { next, down ->
-        if (down.x >= width - panelPx) {
-            { viewModel.setDay(day + if (next) 1 else -1) }
-        } else {
-            null
-        }
-    }
+    var height by remember { mutableIntStateOf(0) }
+    val offset = remember { Animatable(0f) }
+    val moving by remember { derivedStateOf { offset.value != 0f } }
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val panelPx = with(density) { (PanelWidth + 12.dp).toPx() }
+    val minDistance = with(density) { DAY_SWIPE_DISTANCE.toPx() }
 
     Box(
         Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .onSizeChanged { width = it.width }
-            .swipeStep(daySwipe),
+            .clipToBounds()
+            .onSizeChanged { height = it.height }
+            // On the parent, not the (moving) panel: the finger is tracked in a fixed frame, and the
+            // panel's own button still gets its taps.
+            .pointerInput(panelPx) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    if (down.position.x < size.width - panelPx) return@awaitEachGesture
+                    var dy = 0f
+                    val start = awaitVerticalTouchSlopOrCancellation(down.id) { change, overSlop ->
+                        change.consume()
+                        dy = overSlop
+                    } ?: return@awaitEachGesture
+                    scope.launch { offset.snapTo(dy) }
+                    val finished = verticalDrag(start.id) { change ->
+                        dy += change.positionChange().y
+                        change.consume()
+                        scope.launch { offset.snapTo(dy) }
+                    }
+                    val moved = dy
+                    scope.launch {
+                        if (finished && abs(moved) > minDistance) {
+                            // Up = next day (it comes in from below), down = previous day.
+                            viewModel.stepDay(if (moved < 0) 1 else -1)
+                            offset.snapTo(moved + if (moved < 0) height else -height)
+                        }
+                        offset.animateTo(0f, tween(SETTLE_MS))
+                    }
+                }
+            },
     ) {
         for (page in -1..1) {
-            if (page != 0 && !daySwipe.moving) continue
+            if (page != 0 && !moving) continue
             key(day + page) {
                 DayPage(
                     day = day + page,
                     data = data,
                     onToggle = { id, done -> viewModel.setDone(id, day + page, done) },
                     onNow = viewModel::toToday,
-                    modifier = Modifier.fillMaxSize().swipeShift(daySwipe, page),
+                    modifier = Modifier.fillMaxSize().graphicsLayer { translationY = offset.value + page * height },
                 )
             }
         }
@@ -155,21 +199,21 @@ private fun DayPanel(day: Long, today: Long, habits: DayHabits, onNow: () -> Uni
     Column(
         modifier
             .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(20.dp))
-            .padding(horizontal = 10.dp, vertical = 16.dp),
+            .padding(horizontal = 6.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        DonutChart(done = habits.done.size, total = habits.total, size = 92.dp)
-        Spacer(Modifier.height(18.dp))
+        DonutChart(done = habits.done.size, total = habits.total, size = 66.dp, stroke = 7.dp)
+        Spacer(Modifier.height(14.dp))
         Text(
             DateFormat.dayOfWeek(day),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 1,
         )
         Text(
             DateFormat.dayMonth(day),
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = accent,
             textAlign = TextAlign.Center,
@@ -177,9 +221,9 @@ private fun DayPanel(day: Long, today: Long, habits: DayHabits, onNow: () -> Uni
         )
         Text(
             date.year.toString(),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth().padding(start = 6.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 2.dp),
         )
         Spacer(Modifier.height(10.dp))
         Text(

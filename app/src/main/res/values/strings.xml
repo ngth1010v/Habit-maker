@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Habit maker</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_habit">Habits</string>
+    <string name="nav_reward">Rewards</string>
+    <string name="nav_analysis">Analysis</string>
+    <string name="nav_setting">Settings</string>
+
+    <string name="section_in_process">In-process</string>
+    <string name="section_planned">Planned</string>
+    <string name="section_done">Done</string>
+
+    <string name="home_none_remain">No habits remain</string>
+    <string name="home_none_done">Nothing done yet</string>
+    <string name="home_today">Today</string>
+    <string name="home_past">Past</string>
+    <string name="home_future">Future</string>
+    <string name="home_now">Now</string>
+    <string name="action_done">Mark done</string>
+    <string name="action_undone">Mark not done</string>
+
+    <string name="habits_none_remain">No habits remain</string>
+    <string name="habit_new">New habit</string>
+    <string name="habit_edit">Edit habit</string>
+    <string name="habit_name">Name</string>
+    <string name="habit_change_icon">Change icon</string>
+    <string name="habit_note">Note</string>
+    <string name="habit_color">Color</string>
+    <string name="habit_time">Time</string>
+    <string name="habit_start">Start date</string>
+    <string name="habit_end">End date</string>
+    <string name="habit_end_none">None</string>
+    <string name="habit_end_before_start">The end date must not be before the start date.</string>
+    <string name="habit_rewards">Rewards</string>
+    <string name="habit_no_rewards">No rewards yet. Create one in the Rewards tab first.</string>
+    <string name="habit_exceptions">Exceptions</string>
+    <string name="habit_exceptions_hint">On these days the habit is not required, so skipping it does not count as a miss.</string>
+    <string name="habit_delete_title">Delete habit?</string>
+    <string name="habit_delete_message">\"%1$s\" and all its history will be deleted.</string>
+
+    <string name="reward_weekly">Weekly reward</string>
+    <string name="reward_monthly">Monthly reward</string>
+    <string name="reward_final">Final reward</string>
+    <string name="reward_final_needs_end">Set an end date to add a final reward.</string>
+    <string name="reward_none">No reward</string>
+    <string name="reward_tolerance">Miss tolerance</string>
+    <string name="reward_tolerance_hint">Earned even with up to %1$d missed day(s) in the period.</string>
+    <string name="reward_earned">Earned</string>
+    <string name="reward_claim">Claim</string>
+    <string name="reward_empty">No rewards yet. Tap + to add one.</string>
+    <string name="reward_new">New reward</string>
+    <string name="reward_edit">Edit reward</string>
+    <string name="reward_name">Name</string>
+    <string name="reward_delete_title">Delete reward?</string>
+    <string name="reward_delete_message">\"%1$s\" will be removed from every habit that uses it.</string>
+
+    <string name="exception_days_of_week">Days of the week</string>
+    <string name="exception_days_of_month">Days of the month</string>
+    <string name="exception_fixed_days">Fixed days (every year)</string>
+    <string name="exception_add_day">Add day</string>
+    <string name="exception_add_day_hint">Pick any year; only the day and month are kept.</string>
+
+    <string name="period_week">Week %1$s – %2$s</string>
+    <string name="period_month">Month %1$s</string>
+    <string name="period_final">Final reward</string>
+
+    <string name="common_back">Back</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_save">Save</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_ok">OK</string>
+
+    <string name="icon_picker_title">Choose an icon</string>
+    <string name="icon_picker_search">Search icons</string>
+    <string name="icon_picker_none">No icons match.</string>
+
+    <string name="analysis_coming_soon">Coming soon</string>
+
+    <string name="setting_general">General</string>
+    <string name="setting_language">Language</string>
+    <string name="setting_language_system">System default</string>
+    <string name="setting_about">About</string>
+    <string name="setting_version">Version %1$s</string>
+    <string name="setting_licenses">Licenses</string>
+    <string name="setting_licenses_body">Icons: Phosphor Icons (MIT)</string>
+</resources>

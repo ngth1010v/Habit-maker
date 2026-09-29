@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Habit maker</string>
+
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_habit">Thói quen</string>
+    <string name="nav_reward">Phần thưởng</string>
+    <string name="nav_analysis">Phân tích</string>
+    <string name="nav_setting">Cài đặt</string>
+
+    <string name="section_in_process">Đang thực hiện</string>
+    <string name="section_planned">Đã lên kế hoạch</string>
+    <string name="section_done">Đã xong</string>
+
+    <string name="home_none_remain">Không còn thói quen nào</string>
+    <string name="home_none_done">Chưa hoàn thành mục nào</string>
+    <string name="home_today">Hôm nay</string>
+    <string name="home_past">Đã qua</string>
+    <string name="home_future">Tương lai</string>
+    <string name="home_now">Hôm nay</string>
+    <string name="action_done">Đánh dấu đã xong</string>
+    <string name="action_undone">Bỏ đánh dấu</string>
+
+    <string name="habits_none_remain">Không còn thói quen nào</string>
+    <string name="habit_new">Thói quen mới</string>
+    <string name="habit_edit">Sửa thói quen</string>
+    <string name="habit_name">Tên</string>
+    <string name="habit_change_icon">Đổi biểu tượng</string>
+    <string name="habit_note">Ghi chú</string>
+    <string name="habit_color">Màu</string>
+    <string name="habit_time">Thời gian</string>
+    <string name="habit_start">Ngày bắt đầu</string>
+    <string name="habit_end">Ngày kết thúc</string>
+    <string name="habit_end_none">Không có</string>
+    <string name="habit_end_before_start">Ngày kết thúc không được trước ngày bắt đầu.</string>
+    <string name="habit_rewards">Phần thưởng</string>
+    <string name="habit_no_rewards">Chưa có phần thưởng. Hãy tạo ở tab Phần thưởng trước.</string>
+    <string name="habit_exceptions">Ngoại lệ</string>
+    <string name="habit_exceptions_hint">Những ngày này không bắt buộc, bỏ qua sẽ không bị tính là lỡ.</string>
+    <string name="habit_delete_title">Xoá thói quen?</string>
+    <string name="habit_delete_message">\"%1$s\" và toàn bộ lịch sử sẽ bị xoá.</string>
+
+    <string name="reward_weekly">Thưởng hằng tuần</string>
+    <string name="reward_monthly">Thưởng hằng tháng</string>
+    <string name="reward_final">Thưởng cuối cùng</string>
+    <string name="reward_final_needs_end">Đặt ngày kết thúc để thêm thưởng cuối cùng.</string>
+    <string name="reward_none">Không thưởng</string>
+    <string name="reward_tolerance">Số ngày được lỡ</string>
+    <string name="reward_tolerance_hint">Vẫn nhận thưởng nếu lỡ tối đa %1$d ngày trong kỳ.</string>
+    <string name="reward_earned">Đã đạt được</string>
+    <string name="reward_claim">Nhận</string>
+    <string name="reward_empty">Chưa có phần thưởng. Nhấn + để thêm.</string>
+    <string name="reward_new">Phần thưởng mới</string>
+    <string name="reward_edit">Sửa phần thưởng</string>
+    <string name="reward_name">Tên</string>
+    <string name="reward_delete_title">Xoá phần thưởng?</string>
+    <string name="reward_delete_message">\"%1$s\" sẽ bị gỡ khỏi mọi thói quen đang dùng.</string>
+
+    <string name="exception_days_of_week">Các ngày trong tuần</string>
+    <string name="exception_days_of_month">Các ngày trong tháng</string>
+    <string name="exception_fixed_days">Ngày cố định (hằng năm)</string>
+    <string name="exception_add_day">Thêm ngày</string>
+    <string name="exception_add_day_hint">Chọn năm nào cũng được; chỉ giữ ngày và tháng.</string>
+
+    <string name="period_week">Tuần %1$s – %2$s</string>
+    <string name="period_month">Tháng %1$s</string>
+    <string name="period_final">Thưởng cuối cùng</string>
+
+    <string name="common_back">Quay lại</string>
+    <string name="common_delete">Xoá</string>
+    <string name="common_cancel">Huỷ</string>
+    <string name="common_save">Lưu</string>
+    <string name="common_clear">Xoá</string>
+    <string name="common_ok">OK</string>
+
+    <string name="icon_picker_title">Chọn biểu tượng</string>
+    <string name="icon_picker_search">Tìm biểu tượng</string>
+    <string name="icon_picker_none">Không có biểu tượng phù hợp.</string>
+
+    <string name="analysis_coming_soon">Sắp ra mắt</string>
+
+    <string name="setting_general">Chung</string>
+    <string name="setting_language">Ngôn ngữ</string>
+    <string name="setting_language_system">Theo hệ thống</string>
+    <string name="setting_about">Thông tin</string>
+    <string name="setting_version">Phiên bản %1$s</string>
+    <string name="setting_licenses">Giấy phép</string>
+    <string name="setting_licenses_body">Biểu tượng: Phosphor Icons (MIT)</string>
+</resources>

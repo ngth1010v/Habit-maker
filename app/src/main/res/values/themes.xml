@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Compose draws everything; this only stops the platform drawing an action bar. Light theme only. -->
+    <style name="Theme.HabitMaker" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <!-- Cold-start theme: paints the window background synchronously so the first frame is never a white flash. -->
+    <style name="Theme.HabitMaker.Starting" parent="Theme.HabitMaker">
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+
+</resources>

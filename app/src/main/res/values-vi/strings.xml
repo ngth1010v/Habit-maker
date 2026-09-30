@@ -35,8 +35,6 @@
     <string name="habit_end_before_start">Ngày kết thúc không được trước ngày bắt đầu.</string>
     <string name="habit_rewards">Phần thưởng</string>
     <string name="habit_no_rewards">Chưa có phần thưởng. Hãy tạo ở tab Phần thưởng trước.</string>
-    <string name="habit_exceptions">Ngoại lệ</string>
-    <string name="habit_exceptions_hint">Những ngày này không bắt buộc, bỏ qua sẽ không bị tính là lỡ.</string>
     <string name="habit_delete_title">Xoá thói quen?</string>
     <string name="habit_delete_message">\"%1$s\" và toàn bộ lịch sử sẽ bị xoá.</string>
 
@@ -56,15 +54,13 @@
     <string name="reward_delete_title">Xoá phần thưởng?</string>
     <string name="reward_delete_message">\"%1$s\" sẽ bị gỡ khỏi mọi thói quen đang dùng.</string>
 
-    <string name="exception_days_of_week">Các ngày trong tuần</string>
-    <string name="exception_days_of_month">Các ngày trong tháng</string>
-    <string name="exception_fixed_days">Ngày cố định (hằng năm)</string>
-    <string name="exception_add_day">Thêm ngày</string>
-    <string name="exception_add_day_hint">Chọn năm nào cũng được; chỉ giữ ngày và tháng.</string>
 
     <string name="period_week">Tuần %1$s – %2$s</string>
     <string name="period_month">Tháng %1$s</string>
     <string name="period_final">Thưởng cuối cùng</string>
+    <string name="bar_weekly">hằng tuần</string>
+    <string name="bar_monthly">hằng tháng</string>
+    <string name="bar_final">cuối cùng</string>
 
     <string name="common_back">Quay lại</string>
     <string name="common_delete">Xoá</string>

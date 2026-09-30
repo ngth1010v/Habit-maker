@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import app.habitmaker.domain.Exceptions
 import app.habitmaker.domain.Habit
 import app.habitmaker.domain.HabitColors
 import app.habitmaker.domain.Reward
@@ -49,12 +48,6 @@ data class HabitEntity(
     @ColumnInfo(name = "monthly_tolerance") val monthlyTolerance: Int,
     @ColumnInfo(name = "final_reward_id") val finalRewardId: Long?,
     @ColumnInfo(name = "final_tolerance") val finalTolerance: Int,
-    /** Bit 0 = Monday … bit 6 = Sunday. */
-    @ColumnInfo(name = "except_dow") val exceptDow: Int,
-    /** Bit 0 = day 1 … bit 30 = day 31. */
-    @ColumnInfo(name = "except_dom") val exceptDom: Int,
-    /** Comma-separated `month * 100 + day` values, e.g. "1212,101". */
-    @ColumnInfo(name = "except_dates") val exceptDates: String,
     @ColumnInfo(name = "sort_order") val sortOrder: Int,
     @ColumnInfo(name = "created_at") val createdAt: Long,
 ) {
@@ -69,11 +62,6 @@ data class HabitEntity(
         weekly = weeklyRewardId?.let { RewardRule(it, weeklyTolerance) },
         monthly = monthlyRewardId?.let { RewardRule(it, monthlyTolerance) },
         final = if (endDay != null) finalRewardId?.let { RewardRule(it, finalTolerance) } else null,
-        exceptions = Exceptions(
-            daysOfWeek = exceptDow,
-            daysOfMonth = exceptDom,
-            dates = exceptDates.split(',').mapNotNull { it.trim().toIntOrNull() },
-        ),
         sortOrder = sortOrder,
     )
 
@@ -92,9 +80,6 @@ data class HabitEntity(
             monthlyTolerance = habit.monthly?.tolerance ?: 0,
             finalRewardId = habit.final?.rewardId?.takeIf { habit.endDay != null },
             finalTolerance = habit.final?.tolerance ?: 0,
-            exceptDow = habit.exceptions.daysOfWeek,
-            exceptDom = habit.exceptions.daysOfMonth,
-            exceptDates = habit.exceptions.dates.sorted().joinToString(","),
             sortOrder = habit.sortOrder,
             createdAt = createdAt,
         )

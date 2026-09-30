@@ -6,11 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,18 +20,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -68,10 +61,6 @@ import app.habitmaker.ui.component.ColorGrid
 import app.habitmaker.ui.component.ConfirmDialog
 import app.habitmaker.ui.component.IconPickerSheet
 import app.habitmaker.util.DateFormat
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.Locale
 
 private const val DAY_MS = 86_400_000L
 private val FieldShape = RoundedCornerShape(12.dp)
@@ -198,14 +187,6 @@ fun HabitEditScreen(habitId: Long, onClose: () -> Unit) {
                 disabledHint = if (draft.endDay == null) stringResource(R.string.reward_final_needs_end) else null,
             ) { r -> viewModel.edit { it.copy(final = r) } }
 
-            Label(stringResource(R.string.habit_exceptions))
-            Text(stringResource(R.string.habit_exceptions_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-            SubLabel(stringResource(R.string.exception_days_of_week))
-            DaysOfWeek(draft.exceptDow) { mask -> viewModel.edit { it.copy(exceptDow = mask) } }
-            SubLabel(stringResource(R.string.exception_days_of_month))
-            DaysOfMonth(draft.exceptDom) { mask -> viewModel.edit { it.copy(exceptDom = mask) } }
-            SubLabel(stringResource(R.string.exception_fixed_days))
-            FixedDates(draft.exceptDates) { list -> viewModel.edit { it.copy(exceptDates = list) } }
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -237,11 +218,6 @@ fun HabitEditScreen(habitId: Long, onClose: () -> Unit) {
 @Composable
 private fun Label(text: String) {
     Text(text, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 10.dp))
-}
-
-@Composable
-private fun SubLabel(text: String) {
-    Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -387,95 +363,4 @@ private fun RuleEditor(
             )
         }
     }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun DaysOfWeek(mask: Int, onChange: (Int) -> Unit) {
-    val locale = Locale.getDefault()
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        DayOfWeek.entries.forEachIndexed { i, dow ->
-            val on = (mask shr i) and 1 == 1
-            FilterChip(
-                selected = on,
-                onClick = { onChange(mask xor (1 shl i)) },
-                label = { Text(dow.getDisplayName(TextStyle.SHORT, locale)) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun DaysOfMonth(mask: Int, onChange: (Int) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        (1..31).chunked(7).forEach { week ->
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                week.forEach { d ->
-                    val on = (mask shr (d - 1)) and 1 == 1
-                    Box(
-                        Modifier
-                            .weight(1f)
-                            .aspectRatio(1.3f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (on) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest)
-                            .border(1.dp, if (on) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                            .clickable { onChange(mask xor (1 shl (d - 1))) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("$d", style = MaterialTheme.typography.bodyMedium, color = if (on) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface)
-                    }
-                }
-                repeat(7 - week.size) { Spacer(Modifier.weight(1f)) }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
-@Composable
-private fun FixedDates(dates: List<Int>, onChange: (List<Int>) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        dates.sorted().forEach { md ->
-            InputChip(
-                selected = false,
-                onClick = { onChange(dates - md) },
-                label = { Text(DateFormat.monthDay(md)) },
-                trailingIcon = { Icon(painterResource(R.drawable.ph_x_bold), stringResource(R.string.common_delete), modifier = Modifier.size(14.dp)) },
-            )
-        }
-        AssistChip(
-            onClick = { open = true },
-            label = { Text(stringResource(R.string.exception_add_day)) },
-            leadingIcon = { Icon(painterResource(R.drawable.ph_plus), contentDescription = null, modifier = Modifier.size(16.dp)) },
-        )
-    }
-    if (open) {
-        val state = rememberDatePickerState()
-        DatePickerDialog(
-            onDismissRequest = { open = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let {
-                        val d = LocalDate.ofEpochDay(Math.floorDiv(it, DAY_MS))
-                        val md = d.monthValue * 100 + d.dayOfMonth
-                        if (md !in dates) onChange(dates + md)
-                    }
-                    open = false
-                }) { Text(stringResource(R.string.common_ok)) }
-            },
-            dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.common_cancel)) } },
-        ) {
-            Column {
-                Text(
-                    stringResource(R.string.exception_add_day_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp),
-                )
-                DatePicker(state = state, showModeToggle = false, title = null)
-            }
-        }
-    }
-    HorizontalDivider(Modifier.padding(top = 8.dp), color = Color.Transparent)
 }

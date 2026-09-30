@@ -16,23 +16,18 @@ class RewardEngineTest {
         weekly: RewardRule? = null,
         monthly: RewardRule? = null,
         final: RewardRule? = null,
-        exceptions: Exceptions = Exceptions(),
-    ) = Habit(1, "Run", "person-simple-run", 0, "", start, end, weekly, monthly, final, exceptions, 0)
+    ) = Habit(1, "Run", "person-simple-run", 0, "", start, end, weekly, monthly, final, 0)
 
     // 2026-09-28 is a Monday.
     private val mon = day(2026, 9, 28)
 
     @Test
-    fun exceptionsExcludeDays() {
-        val h = habit(
-            start = mon,
-            exceptions = Exceptions(daysOfWeek = 1 shl 6, daysOfMonth = 1 shl 11, dates = listOf(1212)),
-        )
-        assertFalse(h.isRequiredOn(day(2026, 10, 4))) // Sunday
-        assertFalse(h.isRequiredOn(day(2026, 10, 12))) // day 12 of the month
-        assertFalse(h.isRequiredOn(day(2027, 12, 12))) // every 12/12
-        assertTrue(h.isRequiredOn(day(2026, 10, 5)))
+    fun everyDayInRangeIsRequired() {
+        val h = habit(start = mon, end = mon + 6)
+        assertTrue(h.isRequiredOn(mon))
+        assertTrue(h.isRequiredOn(mon + 6)) // Sunday
         assertFalse(h.isRequiredOn(mon - 1)) // before start
+        assertFalse(h.isRequiredOn(mon + 7)) // after end
     }
 
     @Test
@@ -56,14 +51,6 @@ class RewardEngineTest {
         assertEquals(PeriodKind.WEEK, earned[0].kind)
         assertEquals(mon, earned[0].periodStart)
         assertEquals(9L, earned[0].rewardId)
-    }
-
-    @Test
-    fun exceptionDaysDoNotCountAsMisses() {
-        // Weekends off: 5 required days, tolerance 0 -> all 5 weekdays needed, weekend ignored.
-        val h = habit(start = mon, weekly = RewardRule(9, 0), exceptions = Exceptions(daysOfWeek = 0b1100000))
-        val weekdays = (0L..4L).map { mon + it }.toSet()
-        assertEquals(1, RewardEngine.earned(h, weekdays, mon + 6).size)
     }
 
     @Test
@@ -106,25 +93,44 @@ class RewardEngineTest {
 
     @Test
     fun progressCountsTheDaysPeriod() {
-        // Mon 28/09 – Fri 30/10; Sundays excepted; Tue, Wed and Thu 01/10 done.
+        // Mon 28/09 – Fri 30/10; Tue, Wed and Thu 01/10 done.
         val h = habit(
             start = mon,
             end = day(2026, 10, 30),
             weekly = RewardRule(7, 1),
             monthly = RewardRule(8, 0),
             final = RewardRule(9, 2),
-            exceptions = Exceptions(daysOfWeek = 1 shl 6),
         )
         val done = setOf(mon + 1, mon + 2, mon + 3)
         val p = RewardEngine.progress(h, done, mon + 3)
-        // Week 28/09–04/10: 6 required days, tolerance 1.
-        assertEquals(RewardProgress(PeriodKind.WEEK, 7, 3, 5), p[0])
-        // October 1–30 minus 4 Sundays = 26 required; only 01/10 is done in it.
-        assertEquals(RewardProgress(PeriodKind.MONTH, 8, 1, 26), p[1])
-        // Whole range: 33 days minus 4 Sundays = 29 required, tolerance 2.
-        assertEquals(RewardProgress(PeriodKind.FINAL, 9, 3, 27), p[2])
+        // Week 28/09–04/10: 7 required days, tolerance 1.
+        assertEquals(RewardProgress(PeriodKind.WEEK, 7, 3, 6, mon, mon + 6), p[0])
+        // October 1–30 = 30 required; only 01/10 is done in it.
+        assertEquals(RewardProgress(PeriodKind.MONTH, 8, 1, 30, day(2026, 10, 1), day(2026, 10, 30)), p[1])
+        // Whole range: 33 days, tolerance 2.
+        assertEquals(RewardProgress(PeriodKind.FINAL, 9, 3, 31, mon, day(2026, 10, 30)), p[2])
         // Before the start, the first period is shown; no rules, no progress.
         assertEquals(p[0], RewardEngine.progress(h, done, mon - 30)[0])
         assertTrue(RewardEngine.progress(habit(start = mon), done, mon).isEmpty())
+    }
+
+    @Test
+    fun partialWeekBarCoversOnlyTheHabitsDays() {
+        // Starts Tuesday: the week's bar runs Tue–Sun, 6 days.
+        val h = habit(start = mon + 1, weekly = RewardRule(7, 0))
+        val p = RewardEngine.progress(h, emptySet(), mon + 2)[0]
+        assertEquals(mon + 1, p.from)
+        assertEquals(mon + 6, p.to)
+    }
+
+    @Test
+    fun dayStatesFromToday() {
+        // Wednesday, Monday done, Tuesday missed, Wednesday open.
+        val states = RewardEngine.dayStates(mon, mon + 6, setOf(mon), today = mon + 2)
+        assertEquals(
+            listOf(DayState.DONE, DayState.MISSED, DayState.TODAY_PENDING) + List(4) { DayState.FUTURE },
+            states,
+        )
+        assertEquals(DayState.DONE, RewardEngine.dayStates(mon + 2, mon + 2, setOf(mon + 2), mon + 2)[0])
     }
 }

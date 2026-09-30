@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import app.habitmaker.data.icon.PhosphorIcons
 import app.habitmaker.data.repo.HabitRepository
 import app.habitmaker.data.repo.RewardRepository
-import app.habitmaker.domain.Exceptions
 import app.habitmaker.domain.Habit
 import app.habitmaker.domain.HabitColors
 import app.habitmaker.domain.Reward
@@ -34,9 +33,6 @@ data class HabitDraft(
     val weekly: RuleDraft = RuleDraft(),
     val monthly: RuleDraft = RuleDraft(),
     val final: RuleDraft = RuleDraft(),
-    val exceptDow: Int = 0,
-    val exceptDom: Int = 0,
-    val exceptDates: List<Int> = emptyList(),
     val sortOrder: Int = 0,
 ) {
     val datesValid get() = endDay == null || endDay >= startDay
@@ -53,7 +49,6 @@ data class HabitDraft(
         weekly = weekly.toRule(),
         monthly = monthly.toRule(),
         final = if (endDay != null) final.toRule() else null,
-        exceptions = Exceptions(exceptDow, exceptDom, exceptDates.distinct().sorted()),
         sortOrder = sortOrder,
     )
 
@@ -69,9 +64,6 @@ data class HabitDraft(
             weekly = RuleDraft(h.weekly?.rewardId, h.weekly?.tolerance ?: 0),
             monthly = RuleDraft(h.monthly?.rewardId, h.monthly?.tolerance ?: 0),
             final = RuleDraft(h.final?.rewardId, h.final?.tolerance ?: 0),
-            exceptDow = h.exceptions.daysOfWeek,
-            exceptDom = h.exceptions.daysOfMonth,
-            exceptDates = h.exceptions.dates,
             sortOrder = h.sortOrder,
         )
     }

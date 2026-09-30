@@ -35,8 +35,6 @@
     <string name="habit_end_before_start">The end date must not be before the start date.</string>
     <string name="habit_rewards">Rewards</string>
     <string name="habit_no_rewards">No rewards yet. Create one in the Rewards tab first.</string>
-    <string name="habit_exceptions">Exceptions</string>
-    <string name="habit_exceptions_hint">On these days the habit is not required, so skipping it does not count as a miss.</string>
     <string name="habit_delete_title">Delete habit?</string>
     <string name="habit_delete_message">\"%1$s\" and all its history will be deleted.</string>
 
@@ -56,15 +54,13 @@
     <string name="reward_delete_title">Delete reward?</string>
     <string name="reward_delete_message">\"%1$s\" will be removed from every habit that uses it.</string>
 
-    <string name="exception_days_of_week">Days of the week</string>
-    <string name="exception_days_of_month">Days of the month</string>
-    <string name="exception_fixed_days">Fixed days (every year)</string>
-    <string name="exception_add_day">Add day</string>
-    <string name="exception_add_day_hint">Pick any year; only the day and month are kept.</string>
 
     <string name="period_week">Week %1$s – %2$s</string>
     <string name="period_month">Month %1$s</string>
     <string name="period_final">Final reward</string>
+    <string name="bar_weekly">weekly</string>
+    <string name="bar_monthly">monthly</string>
+    <string name="bar_final">final</string>
 
     <string name="common_back">Back</string>
     <string name="common_delete">Delete</string>

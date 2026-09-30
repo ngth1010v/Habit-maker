@@ -97,8 +97,19 @@ object RewardEngine {
             }
         }
         if (required == 0) return null
-        return RewardProgress(kind, rule.rewardId, done, needed = maxOf(1, required - rule.tolerance))
+        return RewardProgress(kind, rule.rewardId, done, needed = maxOf(1, required - rule.tolerance), from = a, to = b)
     }
+
+    /** Each day of [from]..[to]: after [today] future, else done, or still open today, or missed. */
+    fun dayStates(from: Long, to: Long, doneDays: Set<Long>, today: Long): List<DayState> =
+        (from..to).map { d ->
+            when {
+                d > today -> DayState.FUTURE
+                d in doneDays -> DayState.DONE
+                d == today -> DayState.TODAY_PENDING
+                else -> DayState.MISSED
+            }
+        }
 
     fun weekStart(day: Long): Long =
         LocalDate.ofEpochDay(day).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toEpochDay()

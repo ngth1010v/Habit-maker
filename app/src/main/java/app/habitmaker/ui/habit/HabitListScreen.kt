@@ -68,7 +68,7 @@ class HabitListViewModel(private val repository: HabitRepository, rewardReposito
         val names = rewards.associate { it.id to it.name }
         HabitSections(
             sections = habits.groupBy { it.phase(t) },
-            bars = habits.associate { it.id to it.rewardBars(records[it.id].orEmpty(), t, names) },
+            bars = habits.associate { it.id to it.rewardBars(records[it.id].orEmpty(), t, t, names) },
             loaded = true,
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HabitSections())

@@ -14,9 +14,6 @@ object DateFormat {
     fun dayMonth(day: Long): String = LocalDate.ofEpochDay(day).format(dayMonth)
     fun monthYear(day: Long): String = LocalDate.ofEpochDay(day).format(monthYear)
 
-    /** "12/12" for a yearly exception stored as `month * 100 + day`. */
-    fun monthDay(value: Int): String = "%02d/%02d".format(value % 100, value / 100)
-
     fun dayOfWeek(day: Long, locale: Locale = Locale.getDefault()): String =
         LocalDate.ofEpochDay(day).dayOfWeek.getDisplayName(TextStyle.FULL, locale)
             .replaceFirstChar { it.titlecase(locale) }

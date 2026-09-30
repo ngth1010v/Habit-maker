@@ -156,7 +156,7 @@ private fun DayPage(
     modifier: Modifier = Modifier,
 ) {
     val habits = remember(data, day) { data.dayOf(day) }
-    val editable = day <= data.today
+    val editable = day == data.today
     // The panel runs edge to edge (behind the status bar, down to the bottom bar); the list keeps clear of the status bar.
     Row(modifier.background(MaterialTheme.colorScheme.background).padding(start = 12.dp)) {
         LazyColumn(
@@ -170,7 +170,7 @@ private fun DayPage(
             }
             items(habits.inProcess, key = { it.id }) { habit ->
                 HabitRow(habit.icon, habit.color, habit.name, habit.note, slideItem(), bars = data.barsOf(habit, day)) {
-                    DoneToggle(false, editable, habit.color, stringResource(R.string.action_done)) { onToggle(habit.id, true) }
+                    DoneToggle(false, editable, stringResource(R.string.action_done)) { onToggle(habit.id, true) }
                 }
             }
             item(key = "h_done") {
@@ -181,7 +181,7 @@ private fun DayPage(
             }
             items(habits.done, key = { it.id }) { habit ->
                 HabitRow(habit.icon, habit.color, habit.name, habit.note, slideItem(), dimmed = true, bars = data.barsOf(habit, day)) {
-                    DoneToggle(true, editable, habit.color, stringResource(R.string.action_undone)) { onToggle(habit.id, false) }
+                    DoneToggle(true, editable, stringResource(R.string.action_undone)) { onToggle(habit.id, false) }
                 }
             }
         }

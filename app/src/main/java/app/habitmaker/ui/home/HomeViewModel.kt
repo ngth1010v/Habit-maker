@@ -30,7 +30,7 @@ data class HomeData(
         return DayHabits(todo, done)
     }
 
-    fun barsOf(habit: Habit, day: Long) = habit.rewardBars(records[habit.id].orEmpty(), day, rewardNames)
+    fun barsOf(habit: Habit, day: Long) = habit.rewardBars(records[habit.id].orEmpty(), day, today, rewardNames)
 }
 
 data class DayHabits(val inProcess: List<Habit>, val done: List<Habit>) {
@@ -75,8 +75,8 @@ class HomeViewModel(
     }
 
     fun setDone(habitId: Long, day: Long, done: Boolean) {
-        // Future days are read-only.
-        if (day > today.value) return
+        // Only today can be changed: the past is settled and the future is not here yet.
+        if (day != today.value) return
         viewModelScope.launch { repository.setDone(habitId, day, done) }
     }
 }

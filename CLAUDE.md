@@ -27,9 +27,11 @@ UI (one package per tab under `ui/`) -> ViewModel (StateFlow) -> repository (`da
 `domain/` is pure Kotlin (no Android) and unit-tested.
 
 - Days are `LocalDate.toEpochDay()` longs everywhere.
-- `habit_record` has one row per habit per done day; a required past day without a row is a miss.
-- Exceptions: day-of-week bitmask (bit 0 = Monday), day-of-month bitmask (bit 0 = day 1), yearly
-  dates as `month * 100 + day`.
+- `habit_record` has one row per habit per done day; every day in a habit's dates is required (no
+  exceptions since DB v3), and a past day without a row is a miss. Only today can be marked done
+  or undone (`HomeViewModel.setDone`).
+- Reward bars (`ui/component/HabitRow.kt`): one section per day of the period, colored from today
+  (future gray, done green, today open yellow, past missed red); the label shows done/needed.
 - Rewards (`domain/RewardEngine.kt`): calendar weeks (Mon–Sun) and months; a period cut by the
   habit's dates counts only its days inside. Earned once done days >= max(1, required - tolerance),
   possibly mid-period; the final reward from the end date on. Earned rewards are computed, not

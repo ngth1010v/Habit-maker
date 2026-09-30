@@ -1,14 +1,12 @@
 package app.habitmaker.ui.component
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -20,12 +18,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -34,7 +34,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import app.habitmaker.R
+import app.habitmaker.domain.DayState
 import app.habitmaker.domain.Habit
+import app.habitmaker.domain.PeriodKind
 import app.habitmaker.domain.RewardEngine
 
 val CardShape = RoundedCornerShape(14.dp)
@@ -127,29 +129,49 @@ fun HabitRow(
                 Modifier.pullUp(BarsPullUp).padding(start = RowPaddingH, end = RowPaddingH, bottom = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(1.8.dp),
             ) {
-                bars.forEach { ProgressLine(it, tint) }
+                bars.forEach { ProgressLine(it) }
             }
         }
     }
 }
 
-/** One reward's progress in a habit row: [done] of the [needed] days toward [name]. */
-data class RewardBar(val name: String, val done: Int, val needed: Int)
+/**
+ * One reward's progress in a habit row: [done] of the [needed] days toward [name], and the state of
+ * each day of the period (clipped to the habit's dates) as seen from today.
+ */
+data class RewardBar(val name: String, val kind: PeriodKind, val done: Int, val needed: Int, val days: List<DayState>)
 
-/** The habit's reward bars for the periods around [day]; [rewardNames] by reward id. */
-fun Habit.rewardBars(doneDays: Set<Long>, day: Long, rewardNames: Map<Long, String>): List<RewardBar> =
+/**
+ * The habit's reward bars for the periods around [day]; [rewardNames] by reward id. Day colors are
+ * relative to [today], whichever day is shown.
+ */
+fun Habit.rewardBars(doneDays: Set<Long>, day: Long, today: Long, rewardNames: Map<Long, String>): List<RewardBar> =
     RewardEngine.progress(this, doneDays, day).mapNotNull { p ->
-        rewardNames[p.rewardId]?.let { RewardBar(it, p.done, p.needed) }
+        rewardNames[p.rewardId]?.let {
+            RewardBar(it, p.kind, p.done, p.needed, RewardEngine.dayStates(p.from, p.to, doneDays, today))
+        }
     }
 
+private val DayDone = Color(0xFF43A047)
+private val DayToday = Color(0xFFFBC02D)
+private val DayMissed = Color(0xFFE53935)
+
 @Composable
-private fun ProgressLine(bar: RewardBar, color: Color) {
-    val labelStyle = MaterialTheme.typography.labelSmall.scaled(0.8f)
-    val fraction by animateFloatAsState((bar.done.toFloat() / bar.needed).coerceIn(0f, 1f), tween(300), label = "bar")
+private fun ProgressLine(bar: RewardBar) {
+    // 1.2x the rows' former 0.8 label size.
+    val labelStyle = MaterialTheme.typography.labelSmall.scaled(0.96f)
+    val kind = stringResource(
+        when (bar.kind) {
+            PeriodKind.WEEK -> R.string.bar_weekly
+            PeriodKind.MONTH -> R.string.bar_monthly
+            PeriodKind.FINAL -> R.string.bar_final
+        },
+    )
+    val future = MaterialTheme.colorScheme.surfaceVariant
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                bar.name,
+                "${bar.name} - $kind",
                 style = labelStyle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -158,31 +180,40 @@ private fun ProgressLine(bar: RewardBar, color: Color) {
             )
             Text("${bar.done}/${bar.needed}", style = labelStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Box(
+        // One section per day of the period, edge to edge.
+        Canvas(
             Modifier
                 .padding(top = 2.dp)
                 .fillMaxWidth()
                 .height(4.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .clip(CircleShape),
         ) {
-            Box(
-                Modifier
-                    .fillMaxWidth(fraction)
-                    .fillMaxHeight()
-                    .background(color, CircleShape),
-            )
+            val n = bar.days.size
+            if (n == 0) return@Canvas
+            val w = size.width / n
+            bar.days.forEachIndexed { i, state ->
+                drawRect(
+                    color = when (state) {
+                        DayState.FUTURE -> future
+                        DayState.DONE -> DayDone
+                        DayState.TODAY_PENDING -> DayToday
+                        DayState.MISSED -> DayMissed
+                    },
+                    topLeft = Offset(i * w, 0f),
+                    // Overlap by a pixel so no seams show between sections.
+                    size = Size(w + 1f, size.height),
+                )
+            }
         }
     }
 }
 
 /**
- * The done / undone toggle: a tick for a habit still to do, an x to undo a done one.
- * Disabled on future days.
+ * The done / undone toggle: a tick on green for a habit still to do (green on every day), an x
+ * to undo a done one. Disabled on every day but today.
  */
 @Composable
-fun DoneToggle(done: Boolean, enabled: Boolean, color: Int, contentDescription: String, onClick: () -> Unit) {
-    val tint = Color(color)
+fun DoneToggle(done: Boolean, enabled: Boolean, contentDescription: String, onClick: () -> Unit) {
     Box(
         Modifier.size(36.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -191,11 +222,7 @@ fun DoneToggle(done: Boolean, enabled: Boolean, color: Int, contentDescription: 
             modifier = Modifier
                 .size(22.dp)
                 .background(
-                    when {
-                        !enabled -> MaterialTheme.colorScheme.surfaceVariant
-                        done -> MaterialTheme.colorScheme.surfaceVariant
-                        else -> tint
-                    },
+                    if (done) MaterialTheme.colorScheme.surfaceVariant else DayDone,
                     CircleShape,
                 ),
             contentAlignment = Alignment.Center,
@@ -204,9 +231,9 @@ fun DoneToggle(done: Boolean, enabled: Boolean, color: Int, contentDescription: 
                 painterResource(if (done) R.drawable.ph_x_bold else R.drawable.ph_check_bold),
                 contentDescription = contentDescription,
                 tint = when {
+                    !done -> Color.White
                     !enabled -> MaterialTheme.colorScheme.outline
-                    done -> MaterialTheme.colorScheme.onSurfaceVariant
-                    else -> Color.White
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 modifier = Modifier.size(12.dp),
             )

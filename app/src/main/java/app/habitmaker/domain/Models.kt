@@ -18,22 +18,11 @@ data class Habit(
     val monthly: RewardRule?,
     /** Only meaningful when [endDay] is set. */
     val final: RewardRule?,
-    val exceptions: Exceptions,
     val sortOrder: Int,
 )
 
 /** A reward granted when a period is done with at most [tolerance] missed days. */
 data class RewardRule(val rewardId: Long, val tolerance: Int)
-
-/**
- * Days the habit is not required. [daysOfWeek]: bit 0 = Monday … bit 6 = Sunday.
- * [daysOfMonth]: bit 0 = day 1 … bit 30 = day 31. [dates]: every year on `month * 100 + day`.
- */
-data class Exceptions(
-    val daysOfWeek: Int = 0,
-    val daysOfMonth: Int = 0,
-    val dates: List<Int> = emptyList(),
-)
 
 data class Reward(
     val id: Long,
@@ -55,8 +44,21 @@ enum class PeriodKind(val code: Int) {
     }
 }
 
-/** How far a habit is toward one reward in a period: [done] of the [needed] days. */
-data class RewardProgress(val kind: PeriodKind, val rewardId: Long, val done: Int, val needed: Int)
+/**
+ * How far a habit is toward one reward in a period: [done] of the [needed] days. [from]..[to] is the
+ * period clipped to the habit's dates.
+ */
+data class RewardProgress(
+    val kind: PeriodKind,
+    val rewardId: Long,
+    val done: Int,
+    val needed: Int,
+    val from: Long,
+    val to: Long,
+)
+
+/** One day of a period, as seen from today. */
+enum class DayState { FUTURE, DONE, TODAY_PENDING, MISSED }
 
 /** A reward a habit has earned for one period; [periodStart] identifies the period. */
 data class EarnedReward(

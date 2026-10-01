@@ -11,6 +11,8 @@
     <string name="section_in_process">In-process</string>
     <string name="section_planned">Planned</string>
     <string name="section_done">Done</string>
+    <string name="section_missed">Missed</string>
+    <string name="section_todo">To-do</string>
 
     <string name="home_none_remain">No habits remain</string>
     <string name="home_none_done">Nothing done yet</string>
@@ -61,6 +63,7 @@
     <string name="bar_weekly">weekly</string>
     <string name="bar_monthly">monthly</string>
     <string name="bar_final">final</string>
+    <string name="bar_show_chart">Show or hide the chart</string>
 
     <string name="common_back">Back</string>
     <string name="common_delete">Delete</string>

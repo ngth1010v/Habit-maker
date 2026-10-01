@@ -33,6 +33,9 @@ data class HomeData(
     fun barsOf(habit: Habit, day: Long) = habit.rewardBars(records[habit.id].orEmpty(), day, today, rewardNames)
 }
 
+/** Only today and yesterday can be changed: older days are settled and the future is not here yet. */
+fun isEditableDay(day: Long, today: Long) = day == today || day == today - 1
+
 data class DayHabits(val inProcess: List<Habit>, val done: List<Habit>) {
     val total get() = inProcess.size + done.size
 }
@@ -75,8 +78,7 @@ class HomeViewModel(
     }
 
     fun setDone(habitId: Long, day: Long, done: Boolean) {
-        // Only today can be changed: the past is settled and the future is not here yet.
-        if (day != today.value) return
+        if (!isEditableDay(day, today.value)) return
         viewModelScope.launch { repository.setDone(habitId, day, done) }
     }
 }

@@ -11,6 +11,8 @@
     <string name="section_in_process">Đang thực hiện</string>
     <string name="section_planned">Đã lên kế hoạch</string>
     <string name="section_done">Đã xong</string>
+    <string name="section_missed">Đã bỏ lỡ</string>
+    <string name="section_todo">Cần làm</string>
 
     <string name="home_none_remain">Không còn thói quen nào</string>
     <string name="home_none_done">Chưa hoàn thành mục nào</string>
@@ -61,6 +63,7 @@
     <string name="bar_weekly">hằng tuần</string>
     <string name="bar_monthly">hằng tháng</string>
     <string name="bar_final">cuối cùng</string>
+    <string name="bar_show_chart">Hiện hoặc ẩn biểu đồ</string>
 
     <string name="common_back">Quay lại</string>
     <string name="common_delete">Xoá</string>

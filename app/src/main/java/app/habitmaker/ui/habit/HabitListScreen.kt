@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 
 data class HabitSections(
     val sections: Map<HabitPhase, List<Habit>> = emptyMap(),
-    /** Each habit's reward progress bars for the current periods. */
+    /** Each in-process habit's reward progress bars for the current periods; planned and done habits show none. */
     val bars: Map<Long, List<RewardBar>> = emptyMap(),
     val loaded: Boolean = false,
 )
@@ -66,9 +66,10 @@ data class HabitSections(
 class HabitListViewModel(private val repository: HabitRepository, rewardRepository: RewardRepository, today: Today) : ViewModel() {
     val state: StateFlow<HabitSections> = combine(repository.habits, repository.records, rewardRepository.rewards, today.flow) { habits, records, rewards, t ->
         val names = rewards.associate { it.id to it.name }
+        val sections = habits.groupBy { it.phase(t) }
         HabitSections(
-            sections = habits.groupBy { it.phase(t) },
-            bars = habits.associate { it.id to it.rewardBars(records[it.id].orEmpty(), t, t, names) },
+            sections = sections,
+            bars = sections[HabitPhase.IN_PROCESS].orEmpty().associate { it.id to it.rewardBars(records[it.id].orEmpty(), t, t, names) },
             loaded = true,
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HabitSections())

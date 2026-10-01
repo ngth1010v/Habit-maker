@@ -197,7 +197,7 @@ private fun TabContent(route: String, shown: Boolean, navController: NavHostCont
 private fun BottomBar(selected: String?, onSelect: (String) -> Unit) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Row(
-            Modifier.fillMaxWidth().navigationBarsPadding().height(35.dp),
+            Modifier.fillMaxWidth().navigationBarsPadding().height(42.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             bottomItems.forEach { item ->

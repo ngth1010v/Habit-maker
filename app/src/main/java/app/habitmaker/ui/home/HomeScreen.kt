@@ -78,7 +78,8 @@ private fun NowLabel() = Text(
 )
 
 /**
- * The day's habits on the left ("In-process" and "Done"), the day panel on the right. Swiping up /
+ * The day's habits on the left ("In-process" — "Missed" on settled past days, "To-do" on future
+ * ones — and "Done"), the day panel on the right. Swiping up /
  * down on the panel steps to the next / previous day like a vertical pager; sideways swipes anywhere
  * go to the tab level.
  */
@@ -156,7 +157,12 @@ private fun DayPage(
     modifier: Modifier = Modifier,
 ) {
     val habits = remember(data, day) { data.dayOf(day) }
-    val editable = day == data.today
+    val editable = isEditableDay(day, data.today)
+    val openHeader = when {
+        editable -> R.string.section_in_process
+        day < data.today -> R.string.section_missed
+        else -> R.string.section_todo
+    }
     // The panel runs edge to edge (behind the status bar, down to the bottom bar); the list keeps clear of the status bar.
     Row(modifier.background(MaterialTheme.colorScheme.background).padding(start = 12.dp)) {
         LazyColumn(
@@ -164,7 +170,7 @@ private fun DayPage(
             contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item(key = "h_in") { SectionHeader(stringResource(R.string.section_in_process), slideItem(), habits.inProcess.size) }
+            item(key = "h_in") { SectionHeader(stringResource(openHeader), slideItem(), habits.inProcess.size) }
             if (data.loaded && habits.inProcess.isEmpty()) {
                 item(key = "e_in") { EmptyLine(stringResource(R.string.home_none_remain), slideItem()) }
             }

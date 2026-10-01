@@ -46,6 +46,7 @@ const ui = [
   ['arrow-left', 'regular'], ['calendar-blank', 'regular'], ['magnifying-glass', 'regular'],
   ['translate', 'regular'], ['info', 'regular'], ['trophy', 'fill'], ['hourglass', 'regular'],
   ['circle-dashed', 'regular'], ['dots-six-vertical', 'regular'],
+  ['download-simple', 'regular'], ['upload-simple', 'regular'],
 ];
 const drawable = path.join(root, 'app/src/main/res/drawable');
 fs.mkdirSync(drawable, { recursive: true });

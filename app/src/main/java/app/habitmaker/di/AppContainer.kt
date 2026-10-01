@@ -1,6 +1,7 @@
 package app.habitmaker.di
 
 import android.content.Context
+import app.habitmaker.data.backup.BackupManager
 import app.habitmaker.data.db.HabitDatabase
 import app.habitmaker.data.icon.PhosphorIcons
 import app.habitmaker.data.repo.HabitRepository
@@ -17,5 +18,6 @@ class AppContainer(private val context: Context) {
     val icons: PhosphorIcons by lazy { PhosphorIcons(context) }
     val habitRepository: HabitRepository by lazy { HabitRepository(database) }
     val rewardRepository: RewardRepository by lazy { RewardRepository(database) }
+    val backup: BackupManager by lazy { BackupManager(database) }
     val today = Today()
 }

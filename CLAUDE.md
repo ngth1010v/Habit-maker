@@ -50,5 +50,10 @@ UI (one package per tab under `ui/`) -> ViewModel (StateFlow) -> repository (`da
 - Home: a vertical swipe that starts on the right-hand day panel changes the day (up = next day),
   handled by a pointerInput on the Home root that ignores touches left of the panel; sideways swipes
   anywhere switch tabs.
+- Backup (Settings > Data): `data/backup/BackupManager.kt` exports every table as one SQL script
+  and imports one, replacing all rows in a transaction. `domain/SqlBackup.kt` writes and parses the
+  script; the parser accepts only what the writer emits and the rows are inserted with bound
+  arguments, so an imported file is never executed as SQL. A new table must be added to
+  `BackupManager.Tables`; a backup with a schema newer than the database is refused.
 - Cold start: nothing blocks the first frame; `HabitApp.onCreate` opens the DB and reads the icon
   asset on background threads. Language is a SharedPreferences value (`util/LocalePrefs.kt`).

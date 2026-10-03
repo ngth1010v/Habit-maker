@@ -28,6 +28,8 @@ class RewardRepository(db: HabitDatabase) {
 
     suspend fun delete(id: Long) = dao.delete(id)
 
+    suspend fun reorder(ids: List<Long>) = dao.reorder(ids)
+
     suspend fun claim(earned: EarnedReward) = dao.insertClaim(
         RewardClaimEntity(earned.habitId, earned.kind.code, earned.periodStart, earned.rewardId, System.currentTimeMillis()),
     )

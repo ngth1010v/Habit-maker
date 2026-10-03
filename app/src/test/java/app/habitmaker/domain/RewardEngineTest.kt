@@ -133,4 +133,29 @@ class RewardEngineTest {
         )
         assertEquals(DayState.DONE, RewardEngine.dayStates(mon + 2, mon + 2, setOf(mon + 2), mon + 2)[0])
     }
+
+    @Test
+    fun dayStatesOnAPastDay() {
+        // Today is Wednesday, Monday done; shown on Tuesday, so Wednesday on is not settled yet.
+        val states = RewardEngine.dayStates(mon, mon + 6, setOf(mon), today = mon + 2, shown = mon + 1)
+        assertEquals(listOf(DayState.DONE, DayState.MISSED) + List(5) { DayState.FUTURE }, states)
+    }
+
+    @Test
+    fun dayStatesOnAFutureDay() {
+        // Today is Wednesday, Monday done; shown on Friday, so Wednesday to Friday are open.
+        val states = RewardEngine.dayStates(mon, mon + 6, setOf(mon), today = mon + 2, shown = mon + 4)
+        assertEquals(
+            listOf(DayState.DONE, DayState.MISSED) + List(3) { DayState.TODAY_PENDING } + List(2) { DayState.FUTURE },
+            states,
+        )
+    }
+
+    @Test
+    fun progressCountsDoneDaysUpToTheShownDay() {
+        val h = habit(start = mon, weekly = RewardRule(7, 0))
+        val done = setOf(mon, mon + 1, mon + 2)
+        assertEquals(2, RewardEngine.progress(h, done, mon + 1, doneUpTo = mon + 1)[0].done)
+        assertEquals(3, RewardEngine.progress(h, done, mon + 2, doneUpTo = mon + 2)[0].done)
+    }
 }

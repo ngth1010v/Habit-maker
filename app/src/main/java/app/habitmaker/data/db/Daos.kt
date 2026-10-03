@@ -69,6 +69,14 @@ interface RewardDao {
     @Query("DELETE FROM reward WHERE id = :id")
     suspend fun delete(id: Long)
 
+    @Query("UPDATE reward SET sort_order = :order WHERE id = :id")
+    suspend fun setSortOrder(id: Long, order: Int)
+
+    @Transaction
+    suspend fun reorder(ids: List<Long>) {
+        ids.forEachIndexed { index, id -> setSortOrder(id, index) }
+    }
+
     @Query("SELECT * FROM reward_claim")
     fun observeClaims(): Flow<List<RewardClaimEntity>>
 

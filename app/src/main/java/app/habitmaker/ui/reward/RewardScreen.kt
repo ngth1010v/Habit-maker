@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -68,15 +69,23 @@ import app.habitmaker.ui.component.RowText
 import app.habitmaker.ui.component.scaled
 import app.habitmaker.ui.component.ScreenTitle
 import app.habitmaker.ui.component.SectionHeader
+import app.habitmaker.ui.component.rememberReorderState
+import app.habitmaker.ui.component.reorderableItem
 import app.habitmaker.ui.component.slideItem
 import app.habitmaker.util.DateFormat
 
 /** Marker for "create a new reward" in the sheet state. */
 private val NewReward = Reward(0, "", PhosphorIcons.DEFAULT_REWARD, HabitColors.DEFAULT, "", 0)
 
+/** The all-rewards section header; rewards may only be dragged under it. */
+private const val AllHeaderKey = "h_all"
+
+private fun unclaimedKey(u: Unclaimed) = "e_" + u.earned.habitId + "_" + u.earned.kind + "_" + u.earned.periodStart
+
 /**
  * Earned rewards waiting to be claimed on top, then every reward (one row each, with how many
- * times it has been earned). Tapping a reward opens a small edit sheet from the bottom.
+ * times it has been earned). Tapping a reward opens a small edit sheet from the bottom;
+ * long-press and drag reorders the rewards.
  */
 @Composable
 fun RewardScreen() {
@@ -86,65 +95,99 @@ fun RewardScreen() {
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Reward?>(null) }
+    val byId = remember(state) { state.rewards.associateBy { it.reward.id } }
+    val unclaimedByKey = remember(state) { state.unclaimed.associateBy { unclaimedKey(it) } }
+
+    // The keys a drag works on, in display order; the database's next emission replaces them.
+    var order by remember(state) {
+        mutableStateOf(
+            buildList<Any> {
+                if (state.unclaimed.isNotEmpty()) {
+                    add("h_earned")
+                    state.unclaimed.forEach { add(unclaimedKey(it)) }
+                    add("gap")
+                }
+                add(AllHeaderKey)
+                if (state.loaded && state.rewards.isEmpty()) add("empty")
+                state.rewards.forEach { add(it.reward.id) }
+            },
+        )
+    }
+    val listState = rememberLazyListState()
+    val reorder = rememberReorderState(listState)
+    reorder.update(
+        keys = order,
+        canDrag = { it is Long },
+        // The lifted row may only sit right after the all-rewards header or another reward.
+        isSlot = { before, _ -> before == AllHeaderKey || before is Long },
+        onMove = { key, to ->
+            order = order.filter { it != key }.toMutableList().apply { add(to, key) }
+        },
+        onDrop = { viewModel.reorder(order.filterIsInstance<Long>()) },
+    )
 
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
         Column {
         ScreenTitle(stringResource(R.string.nav_reward))
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             contentPadding = PaddingValues(top = 4.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (state.unclaimed.isNotEmpty()) {
-                item(key = "h_earned") { SectionHeader(stringResource(R.string.reward_earned), slideItem(), state.unclaimed.size) }
-                items(state.unclaimed, key = { "e_${it.earned.habitId}_${it.earned.kind}_${it.earned.periodStart}" }) { u ->
-                    Row(
-                        slideItem()
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f), CardShape)
-                            .heightIn(min = RowMinHeight)
-                            .padding(horizontal = RowPaddingH, vertical = RowPaddingV),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        CircleIcon(u.reward.icon, Color(u.reward.color), size = 32.dp)
-                        Spacer(Modifier.width(12.dp))
-                        RowText(
-                            u.reward.name,
-                            u.habitName + " · " + periodLabel(u.earned.kind, u.earned.periodStart, u.earned.periodEnd),
-                            Modifier.weight(1f),
-                        )
-                        FilledTonalButton(onClick = { viewModel.claim(u.earned) }) { Text(stringResource(R.string.reward_claim)) }
-                    }
-                }
-                item(key = "gap") { Spacer(Modifier.height(8.dp)) }
-            }
-            item(key = "h_all") { SectionHeader(stringResource(R.string.nav_reward), slideItem(), state.rewards.size) }
-            if (state.loaded && state.rewards.isEmpty()) {
-                item(key = "empty") { EmptyLine(stringResource(R.string.reward_empty), slideItem()) }
-            }
-            items(state.rewards, key = { it.reward.id }) { row ->
-                Row(
-                    slideItem()
-                        .fillMaxWidth()
-                        .clip(CardShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerLowest, CardShape)
-                        .clickable { editing = row.reward }
-                        .heightIn(min = RowMinHeight)
-                        .padding(horizontal = RowPaddingH, vertical = RowPaddingV),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    CircleIcon(row.reward.icon, Color(row.reward.color), size = 32.dp)
-                    Spacer(Modifier.width(12.dp))
-                    RowText(row.reward.name, row.reward.note, Modifier.weight(1f))
-                    if (row.earnedCount > 0) {
+            items(order, key = { it }) { key ->
+                when (key) {
+                    "h_earned" -> SectionHeader(stringResource(R.string.reward_earned), slideItem(), state.unclaimed.size)
+                    "gap" -> Spacer(slideItem().height(8.dp))
+                    AllHeaderKey -> SectionHeader(stringResource(R.string.nav_reward), slideItem(), state.rewards.size)
+                    "empty" -> EmptyLine(stringResource(R.string.reward_empty), slideItem())
+                    is Long -> {
+                        val row = byId[key] ?: return@items
                         Row(
-                            Modifier
-                                .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f), CircleShape)
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            reorderableItem(reorder, key)
+                                .fillMaxWidth()
+                                .clip(CardShape)
+                                .background(MaterialTheme.colorScheme.surfaceContainerLowest, CardShape)
+                                // A lifted row's release also ends a tap on it: that must not open the sheet.
+                                .clickable { if (reorder.draggingKey == null) editing = row.reward }
+                                .heightIn(min = RowMinHeight)
+                                .padding(horizontal = RowPaddingH, vertical = RowPaddingV),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(painterResource(R.drawable.ph_trophy_fill), contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(14.dp))
-                            Text(" ×${row.earnedCount}", style = MaterialTheme.typography.labelLarge.scaled(0.9f), color = MaterialTheme.colorScheme.tertiary)
+                            CircleIcon(row.reward.icon, Color(row.reward.color), size = 32.dp)
+                            Spacer(Modifier.width(12.dp))
+                            RowText(row.reward.name, row.reward.note, Modifier.weight(1f))
+                            if (row.earnedCount > 0) {
+                                Row(
+                                    Modifier
+                                        .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f), CircleShape)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Icon(painterResource(R.drawable.ph_trophy_fill), contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(14.dp))
+                                    Text(" ×${row.earnedCount}", style = MaterialTheme.typography.labelLarge.scaled(0.9f), color = MaterialTheme.colorScheme.tertiary)
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        val u = unclaimedByKey[key] ?: return@items
+                        Row(
+                            slideItem()
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f), CardShape)
+                                .heightIn(min = RowMinHeight)
+                                .padding(horizontal = RowPaddingH, vertical = RowPaddingV),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            CircleIcon(u.reward.icon, Color(u.reward.color), size = 32.dp)
+                            Spacer(Modifier.width(12.dp))
+                            RowText(
+                                u.reward.name,
+                                u.habitName + " · " + periodLabel(u.earned.kind, u.earned.periodStart, u.earned.periodEnd),
+                                Modifier.weight(1f),
+                            )
+                            FilledTonalButton(onClick = { viewModel.claim(u.earned) }) { Text(stringResource(R.string.reward_claim)) }
                         }
                     }
                 }

@@ -64,6 +64,10 @@ class RewardViewModel(
         viewModelScope.launch { rewardRepository.delete(id) }
     }
 
+    fun reorder(ids: List<Long>) {
+        viewModelScope.launch { rewardRepository.reorder(ids) }
+    }
+
     fun claim(earned: EarnedReward) {
         viewModelScope.launch { rewardRepository.claim(earned) }
     }

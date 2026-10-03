@@ -163,13 +163,14 @@ fun HabitRow(
 data class RewardBar(val name: String, val kind: PeriodKind, val done: Int, val needed: Int, val days: List<DayState>)
 
 /**
- * The habit's reward bars for the periods around [day]; [rewardNames] by reward id. Day colors are
- * relative to [today], whichever day is shown.
+ * The habit's reward bars for the periods around [day]; [rewardNames] by reward id. The bar shows the
+ * period as it stood on [day]: a past day as it was then, a future one with the days from [today] on
+ * still open.
  */
 fun Habit.rewardBars(doneDays: Set<Long>, day: Long, today: Long, rewardNames: Map<Long, String>): List<RewardBar> =
-    RewardEngine.progress(this, doneDays, day).mapNotNull { p ->
+    RewardEngine.progress(this, doneDays, day, doneUpTo = minOf(day, today)).mapNotNull { p ->
         rewardNames[p.rewardId]?.let {
-            RewardBar(it, p.kind, p.done, p.needed, RewardEngine.dayStates(p.from, p.to, doneDays, today))
+            RewardBar(it, p.kind, p.done, p.needed, RewardEngine.dayStates(p.from, p.to, doneDays, today, shown = day))
         }
     }
 

@@ -54,15 +54,15 @@ object RewardEngine {
      * order). [day] is first clamped to the habit's range, so a planned habit shows its first period
      * and a finished one its last. A period with no required days is left out.
      */
-    fun progress(habit: Habit, doneDays: Set<Long>, day: Long): List<RewardProgress> {
+    fun progress(habit: Habit, doneDays: Set<Long>, day: Long, doneUpTo: Long = Long.MAX_VALUE): List<RewardProgress> {
         val d = habit.endDay?.let { minOf(maxOf(day, habit.startDay), it) } ?: maxOf(day, habit.startDay)
         val month = LocalDate.ofEpochDay(d).withDayOfMonth(1)
         return listOfNotNull(
-            habit.weekly?.let { tally(habit, it, PeriodKind.WEEK, weekStart(d), weekStart(d) + 6, doneDays) },
+            habit.weekly?.let { tally(habit, it, PeriodKind.WEEK, weekStart(d), weekStart(d) + 6, doneDays, doneUpTo) },
             habit.monthly?.let {
-                tally(habit, it, PeriodKind.MONTH, month.toEpochDay(), month.with(TemporalAdjusters.lastDayOfMonth()).toEpochDay(), doneDays)
+                tally(habit, it, PeriodKind.MONTH, month.toEpochDay(), month.with(TemporalAdjusters.lastDayOfMonth()).toEpochDay(), doneDays, doneUpTo)
             },
-            habit.final?.let { rule -> habit.endDay?.let { tally(habit, rule, PeriodKind.FINAL, habit.startDay, it, doneDays) } },
+            habit.final?.let { rule -> habit.endDay?.let { tally(habit, rule, PeriodKind.FINAL, habit.startDay, it, doneDays, doneUpTo) } },
         )
     }
 
@@ -77,7 +77,10 @@ object RewardEngine {
         ?.takeIf { it.done >= it.needed }
         ?.let { EarnedReward(habit.id, rule.rewardId, kind, periodStart, periodEnd) }
 
-    /** Done and needed days of the period, clipped to the habit's range; null when nothing is required. */
+    /**
+     * Done and needed days of the period, clipped to the habit's range; null when nothing is required.
+     * Only days up to [doneUpTo] count as done, so a past day shows the progress it had back then.
+     */
     private fun tally(
         habit: Habit,
         rule: RewardRule,
@@ -85,6 +88,7 @@ object RewardEngine {
         periodStart: Long,
         periodEnd: Long,
         doneDays: Set<Long>,
+        doneUpTo: Long = Long.MAX_VALUE,
     ): RewardProgress? {
         val a = maxOf(periodStart, habit.startDay)
         val b = habit.endDay?.let { minOf(periodEnd, it) } ?: periodEnd
@@ -93,18 +97,23 @@ object RewardEngine {
         for (d in a..b) {
             if (habit.isRequiredOn(d)) {
                 required++
-                if (d in doneDays) done++
+                if (d <= doneUpTo && d in doneDays) done++
             }
         }
         if (required == 0) return null
         return RewardProgress(kind, rule.rewardId, done, needed = maxOf(1, required - rule.tolerance), from = a, to = b)
     }
 
-    /** Each day of [from]..[to]: after [today] future, else done, or still open today, or missed. */
-    fun dayStates(from: Long, to: Long, doneDays: Set<Long>, today: Long): List<DayState> =
+    /**
+     * Each day of [from]..[to] as seen on the [shown] day: after [today] future, else done, or still
+     * open today, or missed. A past [shown] day hides what came after it; a future one marks the days
+     * from [today] up to it as still open.
+     */
+    fun dayStates(from: Long, to: Long, doneDays: Set<Long>, today: Long, shown: Long = today): List<DayState> =
         (from..to).map { d ->
             when {
-                d > today -> DayState.FUTURE
+                d > today && d <= shown -> DayState.TODAY_PENDING
+                d > minOf(today, shown) -> DayState.FUTURE
                 d in doneDays -> DayState.DONE
                 d == today -> DayState.TODAY_PENDING
                 else -> DayState.MISSED

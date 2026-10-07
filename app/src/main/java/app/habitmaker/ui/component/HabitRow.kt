@@ -257,8 +257,9 @@ private fun ProgressLine(bar: RewardBar, lineColor: Color) {
 }
 
 /**
- * Done days adding up over the period, in [lineColor], against the red "latest possible" line: the
- * fewest done days each day must already have for the reward to stay reachable. The done line stops
+ * Done days adding up over the period, in [lineColor], against a pale red area under the "latest
+ * possible" line (not drawn): the fewest done days each day must already have for the reward to stay
+ * reachable. The done line stops
  * at the last settled day. Days run along x (at most [MAX_X_LABELS] labels), done days up y to the
  * next labelled step above the highest line; labels sit on 1/2/5 x 10^k steps.
  */
@@ -316,8 +317,7 @@ private fun RewardChart(bar: RewardBar, lineColor: Color) {
             at(n, 0).let { lineTo(it.x, it.y) }
             close()
         }
-        drawPath(limit, DayMissed.copy(alpha = 0.3f))
-        drawLine(DayMissed, at(n - needed, 0), at(n, needed), stroke, StrokeCap.Round)
+        drawPath(limit, DayMissed.copy(alpha = 0.21f))
 
         val done = Path().apply {
             totals.forEachIndexed { day, total -> at(day, total).let { if (day == 0) moveTo(it.x, it.y) else lineTo(it.x, it.y) } }

@@ -237,6 +237,8 @@ private fun DayPanel(day: Long, today: Long, habits: DayHabits, onNow: () -> Uni
             stringResource(
                 when {
                     isToday -> R.string.home_today
+                    day == today - 1 -> R.string.home_yesterday
+                    day == today + 1 -> R.string.home_tomorrow
                     day < today -> R.string.home_past
                     else -> R.string.home_future
                 },

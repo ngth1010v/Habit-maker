@@ -18,6 +18,8 @@
     <string name="home_none_done">Chưa hoàn thành mục nào</string>
     <string name="home_today">Hôm nay</string>
     <string name="home_past">Đã qua</string>
+    <string name="home_yesterday">Hôm qua</string>
+    <string name="home_tomorrow">Ngày mai</string>
     <string name="home_future">Tương lai</string>
     <string name="home_now">Hôm nay</string>
     <string name="action_done">Đánh dấu đã xong</string>

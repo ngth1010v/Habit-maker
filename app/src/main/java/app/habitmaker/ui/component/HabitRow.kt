@@ -259,9 +259,9 @@ private fun ProgressLine(bar: RewardBar, lineColor: Color) {
 /**
  * Done days adding up over the period, in [lineColor], against a pale red area under the "latest
  * possible" line (not drawn): the fewest done days each day must already have for the reward to stay
- * reachable. The done line stops
+ * reachable, and a pale green area from needed up: where the reward is earned. The done line stops
  * at the last settled day. Days run along x (at most [MAX_X_LABELS] labels), done days up y to the
- * next labelled step above the highest line; labels sit on 1/2/5 x 10^k steps.
+ * next labelled step above needed and the line; labels sit on 1/2/5 x 10^k steps.
  */
 @Composable
 private fun RewardChart(bar: RewardBar, lineColor: Color) {
@@ -289,7 +289,8 @@ private fun RewardChart(bar: RewardBar, lineColor: Color) {
         val gap = LabelGap.toPx()
         val top = labelHeight.toPx() / 2
         val h = PlotHeight.toPx()
-        val yMax = maxOf(needed, totals.last(), 1)
+        // Past needed, so the axis tops out a step above it and the green area always shows.
+        val yMax = maxOf(needed + 1, totals.last())
         val yStep = niceStep(yMax / (h / (labelHeight.toPx() * 1.6f)).toInt().coerceAtLeast(1).toFloat())
         val yHigh = ceil(yMax / yStep.toFloat()).toInt() * yStep
         val xStep = niceStep(n / MAX_X_LABELS.toFloat())
@@ -310,6 +311,10 @@ private fun RewardChart(bar: RewardBar, lineColor: Color) {
             drawLine(axis, p, p.copy(y = p.y - 3.dp.toPx()), 1.dp.toPx())
             drawText(text, topLeft = Offset(p.x - text.size.width / 2f, p.y + gap))
         }
+
+        // At or above needed the reward is earned.
+        val reward = at(0, yHigh)
+        drawRect(DayDone.copy(alpha = 0.21f), topLeft = reward, size = Size(w, at(n, needed).y - reward.y))
 
         val limit = Path().apply {
             at(n - needed, 0).let { moveTo(it.x, it.y) }

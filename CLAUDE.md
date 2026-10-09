@@ -36,7 +36,8 @@ UI (one package per tab under `ui/`) -> ViewModel (StateFlow) -> repository (`da
   (future gray, done green, today open yellow, past missed red); the label shows done/needed.
   Tapping a bar opens a chart under it (`RewardChart`): cumulative done days in the habit color
   against a pale red area under the (undrawn) line from (days - needed, 0) to (days, needed), the fewest
-  done days that still keep the reward reachable. Axis labels sit on 1/2/5 x 10^k steps
+  done days that still keep the reward reachable, and a pale green area from needed up (reward
+  earned; the y axis always tops out above needed so it shows). Axis labels sit on 1/2/5 x 10^k steps
   (`domain/NiceStep.kt`, as in Outgo), at most 7 along x.
 - Rewards (`domain/RewardEngine.kt`): calendar weeks (Mon–Sun) and months; a period cut by the
   habit's dates counts only its days inside. Earned once done days >= max(1, required - tolerance),
